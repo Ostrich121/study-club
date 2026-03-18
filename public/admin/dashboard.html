@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理后台首页</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="dashboard" data-title="管理后台首页" data-subtitle="积分统计概览、系统设置与近期操作">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="hero-card admin-banner">
+      <div class="admin-banner-copy">
+        <div class="tag">福建农林大学研习社专题后台</div>
+        <h2>让成员管理、积分纪实与榜单公示在同一套专题风格下清晰展开。</h2>
+        <p>所有积分调整都会记录原因、时间和操作管理员。现在可以继续使用 Excel 导入、粘贴名单，或在手动加减分页处理补分与扣分。</p>
+        <div class="hero-actions">
+          <a class="btn" href="/admin/manual-score.html">前往手动加减分</a>
+          <a class="btn-secondary" href="/admin/excel-score.html">上传签到 Excel</a>
+          <a class="btn-secondary" href="/admin/logs.html">查看积分日志</a>
+        </div>
+      </div>
+      <div class="admin-banner-panel">
+        <img class="brand-logo brand-logo-banner" src="/assets/study-club-logo.png" alt="研习社 Logo" />
+        <div class="status-summary">
+          <strong>习近平新时代中国特色社会主义思想大学生研习社</strong>
+          <span class="muted">积分统计、活动录入、名单管理与公开展示一体化呈现。</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-4">
+      <div class="stat-card">
+        <div class="stat-label">成员总数</div>
+        <div class="stat-value" id="member-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">累计积分</div>
+        <div class="stat-value" id="total-score">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">积分日志数</div>
+        <div class="stat-value" id="log-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">候选名单数</div>
+        <div class="stat-value" id="candidate-count">0</div>
+      </div>
+    </section>
+
+    <section class="page-section grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>系统设置</h2>
+            <p>保留积分规则扩展能力</p>
+          </div>
+        </div>
+        <form id="settings-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="points-per-match">每次识别加分值</label>
+              <input id="points-per-match" type="number" min="1" value="1" />
+            </div>
+            <div class="field">
+              <label for="deduplicate-within-import">同表重复姓名处理</label>
+              <select id="deduplicate-within-import">
+                <option value="true">同名默认只加 1 次</option>
+                <option value="false">同名按出现次数累计</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="save-settings-btn" type="submit">保存系统设置</button>
+          </div>
+          <p class="hint">当前设置将影响 Excel 与粘贴名单加分预览结果。</p>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>排行榜前五</h2>
+            <p>同分按姓名拼音排序</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>姓名</th>
+                <th>学号</th>
+                <th>积分</th>
+              </tr>
+            </thead>
+            <tbody id="top-members"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section card">
+      <div class="section-header">
+        <div>
+          <h2>最近积分日志</h2>
+          <p>便于快速回看最新操作</p>
+        </div>
+      </div>
+      <div class="timeline" id="recent-log-list"></div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

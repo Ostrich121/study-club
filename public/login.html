@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>管理员登录 - 福建农林大学大学生研习社</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <div class="auth-card">
+    <section class="auth-cover hero-card">
+      <div class="brand">
+        <img class="brand-logo" src="/assets/study-club-logo.png" alt="研习社 Logo" />
+        <div>
+          <h2>福建农林大学</h2>
+          <p>习近平新时代中国特色社会主义思想大学生研习社后台入口</p>
+        </div>
+      </div>
+      <h1>统一管理成员积分、活动签到与过程纪实。</h1>
+      <p>页面风格已与首页专题入口统一，适合校园社团日常使用，也便于后续扩展为多活动、多管理员和多维度积分体系。</p>
+      <ul>
+        <li>支持 Excel 上传与粘贴名单加分</li>
+        <li>支持成员库维护、手动加减分、积分日志</li>
+        <li>支持前台学员按姓名查询积分与明细</li>
+      </ul>
+      <p class="footer-note">当前默认管理密码：<span class="mono">2025yxs</span></p>
+    </section>
+
+    <section class="auth-panel hero-card">
+      <div class="section-header">
+        <div>
+          <h2>管理员登录</h2>
+          <p>当前版本为单管理员模式，只需输入管理密码即可进入专题后台。</p>
+        </div>
+      </div>
+
+      <form id="login-form">
+        <div class="field">
+          <label for="password">管理密码</label>
+          <input id="password" name="password" type="password" placeholder="请输入管理密码" value="2025yxs" />
+        </div>
+        <div class="form-actions">
+          <button class="btn" id="login-submit" type="submit">进入后台</button>
+          <a class="btn-secondary" href="/index.html">返回身份入口</a>
+        </div>
+      </form>
+      <p class="footer-note">如需保留多管理员能力，后续可以把当前密码入口扩展为账号密码或分级权限模式。</p>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/login.js"></script>
+</body>
+</html>

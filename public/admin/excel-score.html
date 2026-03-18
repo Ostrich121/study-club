@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Excel 上传加分</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="excel-score" data-title="Excel 上传加分页" data-subtitle="上传签到表后先预览，再确认入库">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="card">
+      <div class="section-header">
+        <div>
+          <h2>上传签到 Excel</h2>
+          <p>支持 <span class="mono">.xlsx</span> 和 <span class="mono">.xls</span>，系统会自动识别姓名列并进行积分匹配。</p>
+        </div>
+      </div>
+      <form id="excel-score-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="excel-file">Excel 文件</label>
+            <input id="excel-file" type="file" name="file" accept=".xlsx,.xls" />
+          </div>
+          <div class="field">
+            <label for="excel-reason">本次加分原因</label>
+            <input id="excel-reason" name="reason" placeholder="例如：上传活动签到表" />
+          </div>
+          <div class="field">
+            <label for="excel-activity-date">活动时间</label>
+            <input id="excel-activity-date" name="activityDate" type="date" />
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" id="excel-preview-btn" type="submit">生成预览</button>
+          <button class="btn-secondary" id="excel-confirm-btn" type="button" disabled>确认加分入库</button>
+        </div>
+        <p class="hint">所有加分均会写入积分日志，并记录活动时间、操作时间、原因与管理员。</p>
+      </form>
+    </section>
+
+    <section class="page-section card">
+      <div class="section-header">
+        <div>
+          <h2>预览结果</h2>
+          <p>未匹配姓名会高亮显示，系统不会自动创建新成员</p>
+        </div>
+      </div>
+      <div id="excel-preview">
+        <div class="empty-state">上传 Excel 后，这里会显示匹配成功人数、未匹配姓名、重复姓名和每个人的加分结果。</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/excel-score.js"></script>
+</body>
+</html>

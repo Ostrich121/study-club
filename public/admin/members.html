@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>成员管理</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="members" data-title="成员管理页" data-subtitle="支持成员增删改查与基础名单上传">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2 id="member-form-title">新增成员</h2>
+            <p>姓名是积分匹配核心字段，系统内不允许重名</p>
+          </div>
+        </div>
+        <form id="member-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="member-name">姓名</label>
+              <input id="member-name" placeholder="请输入姓名" />
+            </div>
+            <div class="field">
+              <label for="member-student-id">学号</label>
+              <input id="member-student-id" placeholder="请输入学号" />
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="member-submit" type="submit">保存成员</button>
+            <button class="btn-secondary" id="cancel-edit-btn" type="button">取消编辑</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>上传成员基础名单</h2>
+            <p>支持 Excel 预览后确认导入</p>
+          </div>
+        </div>
+        <form id="member-import-form">
+          <div class="field">
+            <label for="member-import-file">名单文件</label>
+            <input id="member-import-file" type="file" name="file" accept=".xlsx,.xls,.csv" />
+          </div>
+          <div class="form-grid">
+            <div class="field">
+              <label for="duplicate-strategy">上传名单中有重复姓名时</label>
+              <select id="duplicate-strategy">
+                <option value="KEEP_FIRST">保留首条并忽略后续重复</option>
+                <option value="ABORT">发现重复立即终止导入</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="existing-strategy">成员已存在时</label>
+              <select id="existing-strategy">
+                <option value="UPDATE_EXISTING">更新已有成员的学号</option>
+                <option value="SKIP_EXISTING">跳过已有成员</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="member-import-preview-btn" type="submit">生成导入预览</button>
+            <button class="btn-secondary" id="confirm-member-import-btn" type="button" disabled>确认导入成员</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="page-section card">
+      <div class="section-header">
+        <div>
+          <h2>导入预览结果</h2>
+          <p>处理重复姓名与冲突信息后再确认导入</p>
+        </div>
+      </div>
+      <div id="member-import-preview">
+        <div class="empty-state">上传名单后将在这里显示识别结果、重复姓名和冲突信息。</div>
+      </div>
+    </section>
+
+    <section class="page-section card">
+      <div class="section-header">
+        <div>
+          <h2>成员列表</h2>
+          <p>支持姓名和学号搜索</p>
+        </div>
+      </div>
+      <form id="member-search-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="member-search">搜索关键词</label>
+            <input id="member-search" placeholder="输入姓名或学号" />
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn" type="submit">搜索成员</button>
+          </div>
+        </div>
+      </form>
+      <div class="table-wrap page-section">
+        <table>
+          <thead>
+            <tr>
+              <th>姓名</th>
+              <th>学号</th>
+              <th>当前积分</th>
+              <th>更新时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="member-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/members.js"></script>
+</body>
+</html>

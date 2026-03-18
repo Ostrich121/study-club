@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>手动加减分</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="manual-score" data-title="手动加减分页" data-subtitle="支持单个成员手动加分、扣分，先预览后确认">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="split-panel">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>手动积分调整</h2>
+            <p>适合补录、纠错、临时奖励、违纪扣分等场景</p>
+          </div>
+        </div>
+        <form id="manual-score-form">
+          <div class="field">
+            <label for="manual-member-id">选择成员</label>
+            <select id="manual-member-id"></select>
+          </div>
+          <div class="field page-section">
+            <label for="manual-delta">调整分值</label>
+            <input id="manual-delta" type="number" step="1" placeholder="输入正数表示加分，负数表示扣分" />
+          </div>
+          <div class="field page-section">
+            <label for="manual-activity-date">活动时间</label>
+            <input id="manual-activity-date" type="date" />
+          </div>
+          <div class="field page-section">
+            <label for="manual-reason">调整原因</label>
+            <textarea id="manual-reason" placeholder="例如：手动补录活动签到 / 纪律扣分 / 临时表彰"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="manual-preview-btn" type="submit">生成调整预览</button>
+            <button class="btn-secondary" id="manual-confirm-btn" type="button" disabled>确认积分调整</button>
+          </div>
+          <p class="hint">为保证日志完整，手动调整也会写入积分日志并记录活动时间与操作管理员。</p>
+        </form>
+      </div>
+
+      <aside class="card detail-card">
+        <div class="section-header">
+          <div>
+            <h2>当前预览</h2>
+            <p>确认前请核对成员、分值和原因</p>
+          </div>
+        </div>
+        <div id="manual-preview-panel">
+          <div class="empty-state">选择成员并填写调整分值后，这里会展示本次手动加减分的预览结果。</div>
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/manual-score.js"></script>
+</body>
+</html>

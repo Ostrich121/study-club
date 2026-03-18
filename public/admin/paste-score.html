@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>粘贴名单加分</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="paste-score" data-title="粘贴名单加分页" data-subtitle="支持换行、空格、顿号、逗号等多种分隔方式">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="card">
+      <div class="section-header">
+        <div>
+          <h2>直接粘贴名单加分</h2>
+          <p>系统会自动拆分名字并匹配成员库，先预览后确认。</p>
+        </div>
+      </div>
+      <form id="paste-score-form">
+        <div class="field">
+          <label for="paste-reason">本次加分原因</label>
+          <input id="paste-reason" placeholder="例如：粘贴名单加分 / 临时签到补录" />
+        </div>
+        <div class="field page-section">
+          <label for="paste-activity-date">活动时间</label>
+          <input id="paste-activity-date" type="date" />
+        </div>
+        <div class="field page-section">
+          <label for="paste-names">名单内容</label>
+          <textarea id="paste-names" placeholder="支持换行、空格、逗号、中文逗号、顿号等分隔方式"></textarea>
+        </div>
+        <div class="form-actions">
+          <button class="btn" id="paste-preview-btn" type="submit">生成预览</button>
+          <button class="btn-secondary" id="paste-confirm-btn" type="button" disabled>确认加分入库</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="page-section card">
+      <div class="section-header">
+        <div>
+          <h2>预览结果</h2>
+          <p>适合补录、临时活动、快速签到等场景</p>
+        </div>
+      </div>
+      <div id="paste-preview">
+        <div class="empty-state">粘贴名单并填写原因后，这里会显示识别结果。</div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/paste-score.js"></script>
+</body>
+</html>

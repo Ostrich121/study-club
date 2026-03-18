@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: study-club-scoreboard
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npm run build:deploy
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: study-club-db
+          property: connectionString
+
+databases:
+  - name: study-club-db
+    plan: free
+    region: singapore
+    databaseName: study_club
+    user: study_club_user
+    postgresMajorVersion: "17"

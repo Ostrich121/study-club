@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>研习社报名表 - 福建农林大学</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-logo" src="/assets/study-club-logo.png" alt="研习社 Logo" />
+        <div>
+          <h1>福建农林大学大学生研习社报名表</h1>
+          <p>红金专题页风格，前台匿名可访问，提交后列表实时更新</p>
+        </div>
+      </div>
+      <div class="nav-links">
+        <a class="nav-link" href="/index.html">返回身份入口</a>
+        <a class="nav-link" href="/login.html">管理员后台</a>
+      </div>
+    </header>
+
+    <section class="hero-card hero-grid">
+      <div class="hero-copy">
+        <h2>欢迎报名加入大学生研习社。</h2>
+        <p>填写报名信息后，记录会进入后台候选名单管理页面，管理员可继续维护状态、备注和联系方式。当前页面同时支持公开查看报名记录。</p>
+        <div class="hero-actions">
+          <a class="btn" href="/api/public/candidates/export">导出公开报名表 Excel</a>
+          <a class="btn-secondary" href="/index.html">返回首页入口</a>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="stat-card">
+          <div class="stat-label">当前报名人数</div>
+          <div class="stat-value" id="candidate-count-public">0</div>
+          <div class="stat-note">每 20 秒自动刷新</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">最近刷新时间</div>
+          <div class="stat-value" id="candidate-updated-at">--</div>
+          <div class="stat-note">匿名前台可查看</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section split-panel">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>在线报名</h2>
+            <p>姓名与学号为必填项</p>
+          </div>
+        </div>
+        <form id="signup-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="signup-name">姓名</label>
+              <input id="signup-name" placeholder="请输入真实姓名" />
+            </div>
+            <div class="field">
+              <label for="signup-student-id">学号</label>
+              <input id="signup-student-id" placeholder="请输入学号" />
+            </div>
+            <div class="field">
+              <label for="signup-major">专业 / 班级</label>
+              <input id="signup-major" placeholder="例如：计算机科学与技术 2025 级" />
+            </div>
+            <div class="field">
+              <label for="signup-phone">手机号</label>
+              <input id="signup-phone" placeholder="用于管理员联系" />
+            </div>
+          </div>
+          <div class="field page-section">
+            <label for="signup-note">报名说明</label>
+            <textarea id="signup-note" placeholder="可以填写想加入的原因、擅长方向或想参与的工作"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="signup-submit-btn" type="submit">提交报名</button>
+          </div>
+          <p class="hint">为避免重复提交，同一学号只允许提交一次。</p>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>公开报名列表</h2>
+            <p>手机号不会在公开列表中展示</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>姓名</th>
+                <th>学号</th>
+                <th>专业 / 班级</th>
+                <th>状态</th>
+                <th>报名时间</th>
+              </tr>
+            </thead>
+            <tbody id="signup-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/signup.js"></script>
+</body>
+</html>

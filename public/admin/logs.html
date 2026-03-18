@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>积分日志</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="logs" data-title="积分日志页" data-subtitle="查看每次积分变动的来源、原因、时间与管理员">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="card">
+      <div class="section-header">
+        <div>
+          <h2>积分变动记录</h2>
+          <p>支持按成员、原因、管理员等关键词搜索</p>
+        </div>
+      </div>
+      <form id="log-search-form">
+        <div class="form-grid">
+          <div class="field">
+            <label for="log-search">搜索关键词</label>
+            <input id="log-search" placeholder="例如：郑子仪 / 上传活动签到表" />
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn" type="submit">搜索日志</button>
+          </div>
+        </div>
+      </form>
+      <div class="table-wrap page-section">
+        <table>
+          <thead>
+            <tr>
+              <th>姓名</th>
+              <th>变动分值</th>
+              <th>活动时间</th>
+              <th>变动原因</th>
+              <th>来源</th>
+              <th>操作管理员</th>
+              <th>操作时间</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/logs.js"></script>
+</body>
+</html>

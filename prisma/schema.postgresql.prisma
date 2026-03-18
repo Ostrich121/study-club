@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OperationStatus {
+  PENDING
+  PROCESSING
+  CONFIRMED
+  EXPIRED
+}
+
+enum CandidateStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ImportBatchType {
+  EXCEL
+  PASTE
+  MEMBER_IMPORT
+  MANUAL
+}
+
+enum ScoreSourceType {
+  EXCEL
+  PASTE
+  MANUAL
+}
+
+model Admin {
+  id           Int                @id @default(autoincrement())
+  username     String             @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  logs         ScoreLog[]
+  batches      ImportBatch[]
+  operations   PendingOperation[]
+}
+
+model Member {
+  id         Int        @id @default(autoincrement())
+  name       String     @unique
+  studentId  String     @unique
+  score      Int        @default(0)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  scoreLogs  ScoreLog[]
+}
+
+model ImportBatch {
+  id              Int             @id @default(autoincrement())
+  type            ImportBatchType
+  reason          String
+  sourceName      String?
+  pointsPerMember Int
+  totalMatched    Int             @default(0)
+  operatorId      Int
+  operator        Admin           @relation(fields: [operatorId], references: [id])
+  createdAt       DateTime        @default(now())
+  logs            ScoreLog[]
+}
+
+model ScoreLog {
+  id          Int             @id @default(autoincrement())
+  memberId    Int
+  member      Member          @relation(fields: [memberId], references: [id])
+  delta       Int
+  activityDate String?
+  reason      String
+  sourceType  ScoreSourceType
+  operatorId  Int?
+  operator    Admin?          @relation(fields: [operatorId], references: [id])
+  batchId     Int?
+  batch       ImportBatch?    @relation(fields: [batchId], references: [id])
+  createdAt   DateTime        @default(now())
+
+  @@index([memberId, createdAt])
+  @@index([createdAt])
+}
+
+model PendingOperation {
+  id          Int             @id @default(autoincrement())
+  token       String          @unique
+  type        String
+  payload     String
+  status      OperationStatus @default(PENDING)
+  operatorId  Int
+  operator    Admin           @relation(fields: [operatorId], references: [id])
+  createdAt   DateTime        @default(now())
+  expiresAt   DateTime
+  confirmedAt DateTime?
+
+  @@index([status, expiresAt])
+}
+
+model Candidate {
+  id         Int             @id @default(autoincrement())
+  name       String
+  studentId  String          @unique
+  major      String?
+  phone      String?
+  note       String?
+  status     CandidateStatus @default(PENDING)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
