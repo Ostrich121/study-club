@@ -93,7 +93,16 @@ async function main() {
 
   // 成员基础名单只做缺失补录，不回写已有积分，避免部署时把线上数据重置为种子值。
   for (const member of members) {
-    const profileData = memberProfilesByName.get(member.name) || {};
+    const rawProfileData = memberProfilesByName.get(member.name) || {};
+    const profileData = {
+      studentId: rawProfileData.studentId || null,
+      department: rawProfileData.department || null,
+      politicalStatus: rawProfileData.politicalStatus || null,
+      college: rawProfileData.college || null,
+      grade: rawProfileData.grade || null,
+      major: rawProfileData.major || null,
+      studyStage: rawProfileData.studyStage || null,
+    };
     const existingMember = await prisma.member.findUnique({
       where: { name: member.name },
       select: {
