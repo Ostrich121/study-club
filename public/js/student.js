@@ -15,12 +15,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const logoutButton = document.getElementById("student-logout-btn");
   const loginCard = document.getElementById("student-login-card");
   const summaryCard = document.getElementById("student-summary-card");
-  const profileCard = document.getElementById("student-profile-card");
   const boardCard = document.getElementById("student-board-card");
   const detailCard = document.getElementById("detail-card");
-  const profileForm = document.getElementById("student-profile-form");
-  const profileSubmit = document.getElementById("student-profile-submit");
-  const profileReset = document.getElementById("student-profile-reset");
   const rankingModal = document.getElementById("ranking-modal");
 
   function clearRefreshTimer() {
@@ -33,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function setAuthenticatedLayout(authenticated) {
     loginCard.hidden = authenticated;
     summaryCard.hidden = !authenticated;
-    profileCard.hidden = !authenticated;
     boardCard.hidden = !authenticated;
     detailCard.hidden = !authenticated;
     logoutButton.hidden = !authenticated;
@@ -53,45 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     passwordInput.value = "";
-    loginTip.textContent = "若你还未在学员端设置学号，系统会直接以姓名登录并进入学员页面。";
+    loginTip.textContent = "若当前学员未启用学号密码，系统会直接以姓名登录并进入学员页面。";
     querySubmit.textContent = "登录并进入学员页面";
-  }
-
-  function populateProfileForm(member) {
-    document.getElementById("profile-student-id").value = member.studentId || "";
-    document.getElementById("profile-department").value = member.department || "";
-    document.getElementById("profile-political-status").value = member.politicalStatus || "";
-    document.getElementById("profile-college").value = member.college || "";
-    document.getElementById("profile-grade").value = member.grade || "";
-    document.getElementById("profile-major").value = member.major || "";
-    document.getElementById("profile-study-stage").value = member.studyStage || "";
-  }
-
-  function collectProfilePayload() {
-    return {
-      studentId: document.getElementById("profile-student-id").value.trim(),
-      department: document.getElementById("profile-department").value.trim(),
-      politicalStatus: document.getElementById("profile-political-status").value.trim(),
-      college: document.getElementById("profile-college").value.trim(),
-      grade: document.getElementById("profile-grade").value.trim(),
-      major: document.getElementById("profile-major").value.trim(),
-      studyStage: document.getElementById("profile-study-stage").value.trim(),
-    };
-  }
-
-  function isProfileFormDirty() {
-    if (!currentStudent) {
-      return false;
-    }
-
-    const payload = collectProfilePayload();
-    return payload.studentId !== (currentStudent.studentId || "")
-      || payload.department !== (currentStudent.department || "")
-      || payload.politicalStatus !== (currentStudent.politicalStatus || "")
-      || payload.college !== (currentStudent.college || "")
-      || payload.grade !== (currentStudent.grade || "")
-      || payload.major !== (currentStudent.major || "")
-      || payload.studyStage !== (currentStudent.studyStage || "");
   }
 
   function resetWorkspace(options = {}) {
@@ -109,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       queryInput.value = "";
     }
 
-    document.getElementById("student-workspace-subtitle").textContent = "未自己设置学号前，可仅通过姓名登录；设置学号后，系统会要求继续输入学号作为登录密码。";
+    document.getElementById("student-workspace-subtitle").textContent = "请先输入姓名登录。若系统检测到该学员已启用学号密码，会继续要求输入学号作为登录密码。";
     document.getElementById("current-student-name").textContent = "--";
     document.getElementById("current-student-rank").textContent = "--";
     document.getElementById("current-student-score").textContent = "0";
@@ -130,7 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("member-detail-list").innerHTML = `<div class="empty-state">登录后可点击排行榜成员查看他的加分明细。</div>`;
     document.getElementById("detail-member-name").textContent = "点击某个排名成员查看明细";
     document.getElementById("detail-member-meta").textContent = "这里会显示该成员当前积分、学号和每次积分变动。";
-    profileForm.reset();
   }
 
   async function fetchStudentMe() {
@@ -154,13 +111,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return App.request("/api/public/student-dashboard");
   }
 
-  async function saveStudentProfile(payload) {
-    return App.request("/api/public/student-profile", {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    });
-  }
-
   function hydrateStudentDashboard(data) {
     allMembers = (data.leaderboard && data.leaderboard.allMembers) || [];
     latestUpdatedAt = data.updatedAt;
@@ -182,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("current-student-grade").textContent = App.formatDisplayValue(currentStudent.grade);
     document.getElementById("current-student-major").textContent = App.formatDisplayValue(currentStudent.major);
     document.getElementById("current-student-study-stage").textContent = App.formatDisplayValue(currentStudent.studyStage);
-    document.getElementById("student-workspace-subtitle").textContent = `${currentStudent.name} 同学，以下是你当前的积分报表、个人信息与实时积分榜。`;
+    document.getElementById("student-workspace-subtitle").textContent = `${currentStudent.name} 同学，以下是你当前的积分报表与实时积分榜。个人信息如需修改，请联系管理员。`;
   }
 
   function renderBoardSummary(summary) {
@@ -288,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedMemberId = currentStudent.id;
     setAuthenticatedLayout(true);
     renderSummary();
-    populateProfileForm(currentStudent);
     renderBoardSummary(data.summary || {});
     renderRankings();
     renderMemberDetail(currentStudent, data.logs || []);
@@ -318,9 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       renderSummary();
-      if (!isProfileFormDirty()) {
-        populateProfileForm(currentStudent);
-      }
       renderBoardSummary(data.summary || {});
 
       const selectedStillExists = allMembers.find((member) => String(member.id) === String(selectedMemberId));
@@ -393,34 +339,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } finally {
       App.setButtonBusy(querySubmit, false);
     }
-  });
-
-  profileForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    if (!currentStudent) {
-      App.showToast("请先登录学员账号", "error");
-      return;
-    }
-
-    try {
-      App.setButtonBusy(profileSubmit, true, "保存中...");
-      const result = await saveStudentProfile(collectProfilePayload());
-      await enterStudentMode();
-      App.showToast(result.message);
-    } catch (error) {
-      App.showToast(error.message, "error");
-    } finally {
-      App.setButtonBusy(profileSubmit, false);
-    }
-  });
-
-  profileReset.addEventListener("click", () => {
-    if (!currentStudent) {
-      return;
-    }
-    populateProfileForm(currentStudent);
-    App.showToast("已恢复为当前保存的信息");
   });
 
   logoutButton.addEventListener("click", async () => {

@@ -84,10 +84,13 @@ function resolveMembersByKeywords(members, rawKeywords) {
 
 function buildAdminMemberPayload(body) {
   const name = String(body.name || "").replace(/\s+/g, "").trim();
-  return {
+  const payload = {
     name,
     ...buildMemberProfilePayload(body),
   };
+
+  payload.studentPasswordEnabled = Boolean(payload.studentId);
+  return payload;
 }
 
 router.use(requireAdminApi);

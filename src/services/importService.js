@@ -719,6 +719,9 @@ async function confirmMemberImport({ token, operatorId, duplicateStrategy, exist
         }
 
         const updateData = buildMemberUpdateData(byName, profileData);
+        if (studentId && !byName.studentPasswordEnabled) {
+          updateData.studentPasswordEnabled = true;
+        }
         if (Object.keys(updateData).length === 0) {
           skipped.push({
             rowNumber: row.rowNumber,
@@ -750,6 +753,7 @@ async function confirmMemberImport({ token, operatorId, duplicateStrategy, exist
       const createdMember = await tx.member.create({
         data: {
           name: row.name,
+          studentPasswordEnabled: Boolean(studentId),
           ...profileData,
         },
       });

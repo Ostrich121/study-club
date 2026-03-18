@@ -10,7 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("member-count").textContent = data.memberCount;
       document.getElementById("total-score").textContent = data.totalScore;
       document.getElementById("log-count").textContent = data.logCount;
-      document.getElementById("candidate-count").textContent = data.candidateCount;
       document.getElementById("points-per-match").value = data.settings.pointsPerMatch;
       document.getElementById("deduplicate-within-import").value = String(data.settings.deduplicateWithinImport);
 

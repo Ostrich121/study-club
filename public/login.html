@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>管理员登录 - 福建农林大学大学生研习社</title>
+  <title>管理员登录 - 福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）</title>
   <link rel="stylesheet" href="./css/app.css" />
 </head>
 <body>
@@ -12,8 +12,8 @@
       <div class="brand">
         <img class="brand-logo" src="./assets/study-club-logo.png" alt="研习社 Logo" />
         <div>
-          <h2>福建农林大学</h2>
-          <p>习近平新时代中国特色社会主义思想大学生研习社后台入口</p>
+          <h2>福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）</h2>
+          <p>管理员后台入口</p>
         </div>
       </div>
       <h1>统一管理成员积分、活动签到与过程纪实。</h1>
@@ -23,7 +23,6 @@
         <li>支持成员库维护、手动加减分、积分日志</li>
         <li>支持前台学员按姓名查询积分与明细</li>
       </ul>
-      <p class="footer-note">当前默认管理密码：<span class="mono">2025yxs</span></p>
     </section>
 
     <section class="auth-panel hero-card">
@@ -34,10 +33,10 @@
         </div>
       </div>
 
-      <form id="login-form">
+      <form id="login-form" autocomplete="off">
         <div class="field">
           <label for="password">管理密码</label>
-          <input id="password" name="password" type="password" placeholder="请输入管理密码" value="2025yxs" />
+          <input id="password" name="password" type="password" placeholder="请输入管理密码" autocomplete="off" autocapitalize="off" spellcheck="false" />
         </div>
         <div class="form-actions">
           <button class="btn" id="login-submit" type="submit">进入后台</button>

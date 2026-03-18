@@ -104,5 +104,5 @@ app.use((req, res) => {
 });
 
 app.listen(port, "0.0.0.0", () => {
-  console.log(`大学生研习社积分网站已启动：http://localhost:${port}`);
+  console.log(`福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）积分网站已启动：http://localhost:${port}`);
 });

@@ -906,6 +906,37 @@ tbody tr:hover {
   flex-wrap: wrap;
 }
 
+.score-option-card {
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  color: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.score-option-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px rgba(72, 7, 14, 0.14);
+  border-color: rgba(175, 24, 34, 0.22);
+}
+
+.score-option-card h2 {
+  margin: 0;
+  font-size: 28px;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.score-option-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.score-option-card .btn-secondary {
+  justify-self: flex-start;
+}
+
 .hero-actions a,
 .form-actions a,
 .nav-link {
@@ -1848,18 +1879,18 @@ body.portal-page-switching .student-shell {
 
 .ranking-list {
   display: grid;
-  gap: 12px;
+  gap: 9px;
 }
 
 .ranking-item {
   width: 100%;
   border: 1px solid rgba(248, 223, 154, 0.16);
   background: linear-gradient(180deg, rgba(255, 249, 237, 0.98), rgba(255, 242, 214, 0.95));
-  border-radius: 20px;
-  padding: 16px 18px;
+  border-radius: 18px;
+  padding: 12px 14px;
   display: grid;
-  grid-template-columns: 54px 1fr auto;
-  gap: 14px;
+  grid-template-columns: 42px 1fr auto;
+  gap: 10px;
   align-items: center;
   text-align: left;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -1873,8 +1904,8 @@ body.portal-page-switching .student-shell {
 }
 
 .ranking-rank {
-  width: 42px;
-  height: 42px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   background: rgba(248, 223, 154, 0.24);
   color: #8f171f;
@@ -1882,7 +1913,7 @@ body.portal-page-switching .student-shell {
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 18px;
+  font-size: 15px;
 }
 
 .ranking-rank-top {
@@ -1892,22 +1923,24 @@ body.portal-page-switching .student-shell {
 
 .ranking-main {
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .ranking-main strong {
-  font-size: 18px;
+  font-size: 16px;
+  line-height: 1.25;
 }
 
 .ranking-main small {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .ranking-score {
   color: #8f171f;
   font-weight: 800;
-  font-size: 18px;
+  font-size: 16px;
   white-space: nowrap;
 }
 
@@ -1944,7 +1977,7 @@ body.portal-page-switching .student-shell {
 }
 
 .ranking-list-full .ranking-item {
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 48px 1fr auto;
 }
 
 .module-card-wide {

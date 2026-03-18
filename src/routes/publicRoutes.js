@@ -81,11 +81,6 @@ async function getLatestAdminContentUpdatedAt() {
   return candidates.reduce((latest, current) => (current > latest ? current : latest));
 }
 
-function normalizeOptionalText(value) {
-  const normalizedValue = String(value || "").trim();
-  return normalizedValue ? normalizedValue : null;
-}
-
 async function buildStudentDashboardPayload(memberId) {
   const [members, latestUpdatedAt] = await Promise.all([
     prisma.member.findMany(),
@@ -181,74 +176,7 @@ router.get("/student-dashboard", asyncHandler(async (req, res) => {
 }));
 
 router.patch("/student-profile", requireStudentApi, asyncHandler(async (req, res) => {
-  const currentMember = await prisma.member.findUnique({
-    where: { id: req.student.id },
-    select: {
-      id: true,
-      name: true,
-      studentId: true,
-      studentPasswordEnabled: true,
-    },
-  });
-
-  if (!currentMember) {
-    delete req.session.student;
-    return req.session.save(() => {
-      res.status(404).json({ message: "当前学员不存在，请重新登录" });
-    });
-  }
-
-  const rawStudentId = String(req.body.studentId || "").trim();
-  const nextStudentId = rawStudentId || null;
-  const shouldEnableStudentPassword = Boolean(
-    !currentMember.studentPasswordEnabled
-    && nextStudentId
-    && nextStudentId !== (currentMember.studentId || "")
-  );
-
-  if (currentMember.studentId && !nextStudentId) {
-    return res.status(400).json({ message: "已设置学号后不可清空，如需修改请填写新的学号" });
-  }
-
-  const updatedMember = await prisma.member.update({
-    where: { id: currentMember.id },
-    data: {
-      studentId: nextStudentId,
-      studentPasswordEnabled: currentMember.studentPasswordEnabled || shouldEnableStudentPassword,
-      department: normalizeOptionalText(req.body.department),
-      politicalStatus: normalizeOptionalText(req.body.politicalStatus),
-      college: normalizeOptionalText(req.body.college),
-      grade: normalizeOptionalText(req.body.grade),
-      major: normalizeOptionalText(req.body.major),
-      studyStage: normalizeOptionalText(req.body.studyStage),
-    },
-    select: {
-      id: true,
-      name: true,
-      studentId: true,
-      studentPasswordEnabled: true,
-      department: true,
-      politicalStatus: true,
-      college: true,
-      grade: true,
-      major: true,
-      studyStage: true,
-      score: true,
-      updatedAt: true,
-    },
-  });
-
-  req.session.student = {
-    id: updatedMember.id,
-    name: updatedMember.name,
-  };
-
-  return res.json({
-    message: shouldEnableStudentPassword
-      ? "个人信息已保存，下次登录密码将使用当前学号"
-      : "个人信息已保存",
-    member: updatedMember,
-  });
+  return res.status(403).json({ message: "学员端不可修改个人信息，如需调整请联系管理员" });
 }));
 
 router.get("/leaderboard/export", asyncHandler(async (req, res) => {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>学员积分报表 - 福建农林大学大学生研习社</title>
+  <title>学员积分报表 - 福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）</title>
   <link rel="stylesheet" href="./css/app.css" />
 </head>
 <body class="portal-page">
@@ -13,7 +13,7 @@
         <div class="study-report-topbar">
           <div>
             <h2>学员积分报表</h2>
-            <p id="student-workspace-subtitle">未自己设置学号前，可仅通过姓名登录；设置学号后，系统会要求继续输入学号作为登录密码。</p>
+            <p id="student-workspace-subtitle">请先输入姓名登录。若系统检测到该学员已启用学号密码，会继续要求输入学号作为登录密码。</p>
           </div>
           <div class="inline-actions">
             <button class="btn-secondary" id="student-logout-btn" type="button" hidden>退出登录</button>
@@ -25,7 +25,7 @@
           <div class="section-header">
             <div>
               <h3>学员登录</h3>
-              <p>未自己设置学号前仅需输入姓名；在学员端设置学号后，下次登录密码默认为你的学号。</p>
+              <p>默认可直接通过姓名登录；若系统已启用学号密码，将要求继续输入学号完成登录。</p>
             </div>
           </div>
           <form id="student-query-form">
@@ -43,7 +43,7 @@
                 <button class="btn" id="student-query-submit" type="submit">登录并进入学员页面</button>
               </div>
             </div>
-            <p class="hint student-login-tip" id="student-login-tip">若你还未在学员端设置学号，系统会直接以姓名登录并进入学员页面。</p>
+            <p class="hint student-login-tip" id="student-login-tip">若当前学员未启用学号密码，系统会直接以姓名登录并进入学员页面。</p>
           </form>
         </section>
 
@@ -58,7 +58,7 @@
                   <strong id="current-student-name">--</strong>
                 </div>
                 <div class="study-meta-item">
-                  <span>组内排名</span>
+                  <span>总排名</span>
                   <strong id="current-student-rank">--</strong>
                 </div>
                 <div class="study-meta-item">
@@ -98,51 +98,6 @@
               <strong id="current-student-score">0</strong>
             </div>
           </div>
-        </section>
-
-        <section class="card student-profile-editor-card page-section" id="student-profile-card" hidden>
-          <div class="section-header">
-            <div>
-              <h3>个人信息维护</h3>
-              <p>你可以修改除姓名和积分以外的个人信息。设置学号后，下次登录密码即为该学号。</p>
-            </div>
-          </div>
-          <form id="student-profile-form">
-            <div class="form-grid-3">
-              <div class="field">
-                <label for="profile-student-id">学号</label>
-                <input id="profile-student-id" name="studentId" placeholder="未设置可先留空，设置后将作为登录密码" />
-              </div>
-              <div class="field">
-                <label for="profile-department">所属部门</label>
-                <input id="profile-department" name="department" placeholder="请输入所属部门" />
-              </div>
-              <div class="field">
-                <label for="profile-political-status">政治面貌</label>
-                <input id="profile-political-status" name="politicalStatus" placeholder="请输入政治面貌" />
-              </div>
-              <div class="field">
-                <label for="profile-college">学院</label>
-                <input id="profile-college" name="college" placeholder="请输入学院" />
-              </div>
-              <div class="field">
-                <label for="profile-grade">年级</label>
-                <input id="profile-grade" name="grade" placeholder="请输入年级" />
-              </div>
-              <div class="field">
-                <label for="profile-major">专业</label>
-                <input id="profile-major" name="major" placeholder="请输入专业" />
-              </div>
-              <div class="field">
-                <label for="profile-study-stage">学段</label>
-                <input id="profile-study-stage" name="studyStage" placeholder="请输入学段" />
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn" id="student-profile-submit" type="submit">保存个人信息</button>
-              <button class="btn-secondary" id="student-profile-reset" type="button">恢复当前信息</button>
-            </div>
-          </form>
         </section>
 
         <section class="study-board-card page-section" id="student-board-card" hidden>
