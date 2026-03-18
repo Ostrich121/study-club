@@ -95,10 +95,10 @@ function buildAdminMemberPayload(body) {
 router.use(requireAdminApi);
 
 router.get("/overview", asyncHandler(async (req, res) => {
-  const [memberCount, totalScore, logCount, recentLogs, members] = await Promise.all([
+  const [memberCount, totalScore, activityCount, recentLogs, members] = await Promise.all([
     prisma.member.count(),
     prisma.member.aggregate({ _sum: { score: true } }),
-    prisma.scoreLog.count(),
+    prisma.importBatch.count(),
     prisma.scoreLog.findMany({
       take: 6,
       orderBy: { createdAt: "desc" },
@@ -116,7 +116,8 @@ router.get("/overview", asyncHandler(async (req, res) => {
   res.json({
     memberCount,
     totalScore: totalScore._sum.score || 0,
-    logCount,
+    logCount: activityCount,
+    activityCount,
     recentLogs,
     leaderboard,
     settings,

@@ -5,6 +5,7 @@ const express = require("express");
 const session = require("express-session");
 
 const prisma = require("./lib/prisma");
+const PrismaSessionStore = require("./lib/prismaSessionStore");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const publicRoutes = require("./routes/publicRoutes");
@@ -31,7 +32,7 @@ if (isProduction) {
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || "study-club-local-secret",
   name: "study-club.sid",
   resave: false,
@@ -43,11 +44,20 @@ app.use(session({
     secure: isProduction,
     maxAge: 1000 * 60 * 60 * 8,
   },
-}));
+};
+
+if (isProduction) {
+  sessionConfig.store = new PrismaSessionStore({ prisma });
+}
+
+app.use(session(sessionConfig));
 
 app.use("/css", express.static(path.join(publicDir, "css")));
 app.use("/js", express.static(path.join(publicDir, "js")));
-app.use("/assets", express.static(path.join(publicDir, "assets")));
+app.use("/assets", express.static(path.join(publicDir, "assets"), {
+  maxAge: isProduction ? "30d" : "1h",
+  immutable: isProduction,
+}));
 app.use("/public", express.static(publicDir));
 
 app.get("/", (req, res) => {

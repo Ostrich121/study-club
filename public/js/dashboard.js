@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await App.request("/api/admin/overview");
       document.getElementById("member-count").textContent = data.memberCount;
       document.getElementById("total-score").textContent = data.totalScore;
-      document.getElementById("log-count").textContent = data.logCount;
+      document.getElementById("log-count").textContent = data.activityCount ?? data.logCount;
       document.getElementById("points-per-match").value = data.settings.pointsPerMatch;
       document.getElementById("deduplicate-within-import").value = String(data.settings.deduplicateWithinImport);
 

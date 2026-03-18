@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="admin-home-shell">
         <div class="admin-home-topbar">
           <div class="brand">
-            <img class="brand-logo brand-logo-sidebar" src="/assets/study-club-logo.png" alt="研习社 Logo" />
+            <img class="brand-logo brand-logo-sidebar" src="/assets/study-club-logo-web.png" alt="研习社 Logo" />
             <div>
             <h2 class="sidebar-brand-title">
               <span>福建省大学生研习社</span>
