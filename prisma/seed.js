@@ -10,13 +10,7 @@ const prisma = new PrismaClient();
 async function main() {
   const passwordHash = await bcrypt.hash("2025yxs", 10);
   const placeholderStudentIdPattern = /^2025YXS\d{3}$/;
-  let profileEntries = [];
-
-  try {
-    profileEntries = loadFourthBoneClassProfiles().entries;
-  } catch (error) {
-    console.warn(`未能加载骨干班资料文件，将仅导入基础名单：${error.message}`);
-  }
+  const profileEntries = loadFourthBoneClassProfiles().entries;
 
   const memberProfilesByName = new Map(
     members.map((member, index) => [

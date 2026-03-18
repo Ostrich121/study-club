@@ -1888,16 +1888,19 @@ tbody tr:hover {
 }
 
 .student-actions-topbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
   margin-bottom: 12px;
+}
+
+.student-topbar-actions {
+  justify-content: flex-start;
 }
 
 .student-topbar-copy {
   min-width: 0;
-  flex: 1;
+  width: 100%;
 }
 
 .student-topbar-copy p {
@@ -1950,25 +1953,6 @@ body.portal-page-switching .student-shell {
   transform: none;
   filter: none;
   pointer-events: auto;
-}
-
-.student-query-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: end;
-}
-
-.student-query-button-wrap {
-  min-width: 220px;
-}
-
-.student-password-field[hidden] {
-  display: none;
-}
-
-.student-login-tip {
-  margin-top: 12px;
 }
 
 .student-profile-editor-card,
@@ -2086,6 +2070,13 @@ body.portal-page-switching .student-shell {
 .study-summary-score strong {
   font-size: 52px;
   line-height: 1;
+}
+
+.study-summary-score-unit {
+  margin-left: 6px;
+  font-size: 22px;
+  line-height: 1;
+  font-weight: 700;
 }
 
 .study-board-header {
@@ -2286,10 +2277,6 @@ body.portal-page-switching .student-shell {
     grid-template-columns: 1fr;
   }
 
-  .student-query-grid {
-    grid-template-columns: 1fr;
-  }
-
   .study-profile-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2387,10 +2374,31 @@ body.portal-page-switching .student-shell {
   }
 
   .study-board-header,
-  .study-board-actions,
   .study-report-topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .study-board-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 10px 12px;
+  }
+
+  .study-board-actions .board-update {
+    grid-column: 2;
+    justify-self: end;
+    align-self: start;
+    justify-items: end;
+    text-align: right;
+  }
+
+  .study-board-actions .btn-secondary {
+    grid-column: 1 / -1;
+    width: 100%;
+    justify-content: center;
   }
 
   .admin-home-grid {
@@ -2493,6 +2501,10 @@ body.portal-page-switching .student-shell {
 
   .study-summary-score strong {
     font-size: 40px;
+  }
+
+  .study-summary-score-unit {
+    font-size: 18px;
   }
 
   .ranking-item {

@@ -12,6 +12,31 @@
     <section class="card">
       <div class="section-header">
         <div>
+          <h2>活动批次记录</h2>
+          <p>一次活动记为一个批次，撤销后会整批回滚对应积分。</p>
+        </div>
+      </div>
+      <div class="table-wrap page-section">
+        <table>
+          <thead>
+            <tr>
+              <th>活动时间</th>
+              <th>活动名称</th>
+              <th>加分方式</th>
+              <th>涉及人数</th>
+              <th>操作管理员</th>
+              <th>操作时间</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="batch-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card page-section">
+      <div class="section-header">
+        <div>
           <h2>积分变动记录</h2>
           <p>支持按成员、原因、管理员等关键词搜索</p>
         </div>

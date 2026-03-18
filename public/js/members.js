@@ -468,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   syncFourthProfileButton.addEventListener("click", async () => {
-    if (!window.confirm("将按两份 70 人名单的顺序一一对应，同步第四期骨干班资料。确认继续吗？")) {
+    if (!window.confirm("将按当前内置的 70 人骨干班资料顺序一一对应，同步到现有成员库。确认继续吗？")) {
       return;
     }
 
@@ -477,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await App.request("/api/admin/members/fourth-bone-class/sync", {
         method: "POST",
       });
-      renderBatchToolResult("第四期骨干班资料同步完成", [
+      renderBatchToolResult("内置第四期骨干班资料同步完成", [
         `更新 ${result.result.updatedCount} 名`,
         `跳过 ${result.result.skippedCount} 名`,
       ], result.result.updatedCount ? "success" : "warning");

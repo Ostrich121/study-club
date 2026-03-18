@@ -516,29 +516,169 @@ router.post("/scores/manual/confirm", asyncHandler(async (req, res) => {
 
 router.get("/logs", asyncHandler(async (req, res) => {
   const search = String(req.query.search || "").trim();
-  const logs = await prisma.scoreLog.findMany({
-    where: search
-      ? {
-          OR: [
-            { activityDate: { contains: search } },
-            { reason: { contains: search } },
-            { member: { is: { name: { contains: search } } } },
-            { operator: { is: { displayName: { contains: search } } } },
-          ],
-        }
-      : undefined,
-    include: {
-      member: true,
-      operator: true,
-      batch: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 200,
+  const logWhere = search
+    ? {
+        OR: [
+          { activityDate: { contains: search } },
+          { reason: { contains: search } },
+          { member: { is: { name: { contains: search } } } },
+          { operator: { is: { displayName: { contains: search } } } },
+        ],
+      }
+    : undefined;
+
+  const batchWhere = search
+    ? {
+        OR: [
+          { reason: { contains: search } },
+          { sourceName: { contains: search } },
+          { operator: { is: { displayName: { contains: search } } } },
+          { logs: { some: { activityDate: { contains: search } } } },
+          { logs: { some: { member: { is: { name: { contains: search } } } } } },
+        ],
+      }
+    : undefined;
+
+  const [logs, batches] = await Promise.all([
+    prisma.scoreLog.findMany({
+      where: logWhere,
+      include: {
+        member: true,
+        operator: true,
+        batch: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 200,
+    }),
+    prisma.importBatch.findMany({
+      where: batchWhere,
+      include: {
+        operator: true,
+        logs: {
+          select: {
+            activityDate: true,
+          },
+          take: 1,
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 100,
+    }),
+  ]);
+
+  return res.json({
+    logs,
+    batches: batches.map((batch) => ({
+      ...batch,
+      activityDate: batch.logs[0] ? batch.logs[0].activityDate : null,
+    })),
+  });
+}));
+
+router.delete("/logs/batches/:id", asyncHandler(async (req, res) => {
+  const batchId = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(batchId)) {
+    return res.status(400).json({ message: "活动批次参数无效" });
+  }
+
+  const result = await prisma.$transaction(async (tx) => {
+    const batch = await tx.importBatch.findUnique({
+      where: { id: batchId },
+      include: {
+        logs: true,
+      },
+    });
+
+    if (!batch) {
+      throw new Error("活动批次不存在，可能已被删除");
+    }
+
+    if (batch.logs.length === 0) {
+      await tx.importBatch.delete({
+        where: { id: batchId },
+      });
+
+      return {
+        deletedCount: 0,
+        memberCount: 0,
+        reason: batch.reason,
+      };
+    }
+
+    const reverseByMember = new Map();
+    for (const log of batch.logs) {
+      reverseByMember.set(log.memberId, (reverseByMember.get(log.memberId) || 0) + log.delta);
+    }
+
+    const members = await tx.member.findMany({
+      where: {
+        id: {
+          in: [...reverseByMember.keys()],
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        score: true,
+      },
+    });
+
+    const membersById = new Map(members.map((member) => [member.id, member]));
+    const negativeMembers = [];
+
+    for (const [memberId, totalDelta] of reverseByMember.entries()) {
+      const member = membersById.get(memberId);
+      if (!member) {
+        throw new Error("存在已缺失的成员，无法撤销该活动批次");
+      }
+
+      const nextScore = member.score - totalDelta;
+      if (nextScore < 0) {
+        negativeMembers.push(member.name);
+      }
+    }
+
+    if (negativeMembers.length > 0) {
+      throw new Error(`当前无法撤销该活动：${negativeMembers.join("、")} 的积分将低于 0，请先处理后续扣分记录`);
+    }
+
+    for (const [memberId, totalDelta] of reverseByMember.entries()) {
+      await tx.member.update({
+        where: { id: memberId },
+        data: {
+          score: {
+            increment: -totalDelta,
+          },
+        },
+      });
+    }
+
+    await tx.scoreLog.deleteMany({
+      where: { batchId },
+    });
+
+    await tx.importBatch.delete({
+      where: { id: batchId },
+    });
+
+    return {
+      deletedCount: batch.logs.length,
+      memberCount: reverseByMember.size,
+      reason: batch.reason,
+    };
   });
 
-  return res.json({ logs });
+  return res.json({
+    message: `已撤销活动“${result.reason}”，共回滚 ${result.memberCount} 名成员、删除 ${result.deletedCount} 条积分记录`,
+    result,
+  });
 }));
 
 router.use((error, req, res, next) => {

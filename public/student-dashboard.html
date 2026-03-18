@@ -11,11 +11,11 @@
     <section class="student-shell student-page-shell">
       <div class="study-report-shell">
         <div class="study-report-topbar student-actions-topbar" id="student-topbar">
+          <div class="inline-actions student-topbar-actions">
+            <button class="btn-secondary" id="student-logout-btn" type="button">退出登录</button>
+          </div>
           <div class="student-topbar-copy">
             <p id="student-workspace-subtitle">同学，以下是您当前的积分表以及实时积分榜。</p>
-          </div>
-          <div class="inline-actions">
-            <button class="btn-secondary" id="student-logout-btn" type="button">退出登录</button>
           </div>
         </div>
 
@@ -24,9 +24,10 @@
             <div class="study-summary-text">
               <div class="tag tag-light">成长总积分</div>
               <div class="study-summary-heading">
-                <h3>您目前的总积分</h3>
+                <h3>您目前的总积分为：</h3>
                 <div class="study-summary-score">
                   <strong id="current-student-score">0</strong>
+                  <span class="study-summary-score-unit">分</span>
                 </div>
               </div>
               <div class="study-summary-meta">
