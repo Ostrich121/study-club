@@ -9,6 +9,12 @@ const prisma = require("../lib/prisma");
 const { getSettings } = require("./settingsService");
 const { extractNamesFromWorkbook, parseMemberWorkbook } = require("../utils/excel");
 const { getNameCounts, normalizeName, splitPastedNames } = require("../utils/name");
+const {
+  normalizeOptionalText,
+  buildMemberProfilePayload,
+  buildMemberUpdateData,
+  getMemberProfileChanges,
+} = require("../utils/memberProfile");
 
 function buildToken() {
   return crypto.randomUUID();
@@ -16,6 +22,69 @@ function buildToken() {
 
 function buildPendingExpiry() {
   return new Date(Date.now() + 30 * 60 * 1000);
+}
+
+const normalizeStudentId = normalizeOptionalText;
+
+function normalizeMatchKey(value) {
+  return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+}
+
+function getIdentifierCounts(values) {
+  const counts = new Map();
+
+  for (const rawValue of values) {
+    const identifier = String(rawValue || "").replace(/\s+/g, "").trim();
+    const key = normalizeMatchKey(identifier);
+    if (!key) {
+      continue;
+    }
+
+    const current = counts.get(key) || {
+      key,
+      identifier,
+      count: 0,
+    };
+    current.count += 1;
+    counts.set(key, current);
+  }
+
+  return counts;
+}
+
+function getMatchedSourceLabel(matchSourceSet) {
+  if (matchSourceSet.has("姓名") && matchSourceSet.has("学号")) {
+    return "姓名/学号";
+  }
+  if (matchSourceSet.has("学号")) {
+    return "学号";
+  }
+  return "姓名";
+}
+
+function resolveMemberByIdentifier(identifier, memberByName, memberByStudentId) {
+  const key = normalizeMatchKey(identifier);
+  if (!key) {
+    return null;
+  }
+
+  const byStudentId = memberByStudentId.get(key);
+  if (byStudentId) {
+    return {
+      member: byStudentId,
+      matchedBy: "学号",
+    };
+  }
+
+  const byName = memberByName.get(key);
+  if (byName) {
+    return {
+      member: byName,
+      matchedBy: "姓名",
+    };
+  }
+
+  return null;
 }
 
 async function savePendingOperation({ type, operatorId, payload }) {
@@ -33,40 +102,65 @@ async function savePendingOperation({ type, operatorId, payload }) {
 }
 
 function buildScorePreviewPayload({ names, members, settings, reason, activityDate, sourceType, sourceName, extraMeta = {} }) {
-  const memberMap = new Map(members.map((member) => [normalizeName(member.name), member]));
-  const counts = getNameCounts(names);
-  const matchedMembers = [];
+  const memberByName = new Map(members.map((member) => [normalizeMatchKey(normalizeName(member.name)), member]));
+  const memberByStudentId = new Map(
+    members
+      .filter((member) => normalizeStudentId(member.studentId))
+      .map((member) => [normalizeMatchKey(member.studentId), member]),
+  );
+  const counts = getIdentifierCounts(names);
+  const matchedMap = new Map();
   const unmatchedNames = [];
-  const duplicateNames = [];
 
   for (const item of counts.values()) {
-    const member = memberMap.get(item.name);
-    if (item.count > 1) {
-      duplicateNames.push({
-        name: item.name,
-        count: item.count,
-      });
-    }
+    const resolved = resolveMemberByIdentifier(item.identifier, memberByName, memberByStudentId);
 
-    if (!member) {
+    if (!resolved) {
       unmatchedNames.push({
-        name: item.name,
+        name: item.identifier,
         count: item.count,
       });
       continue;
     }
 
-    matchedMembers.push({
+    const { member, matchedBy } = resolved;
+    const current = matchedMap.get(member.id) || {
       memberId: member.id,
       name: member.name,
       studentId: member.studentId,
       currentScore: member.score,
-      occurrenceCount: item.count,
-      addScore: settings.deduplicateWithinImport
-        ? settings.pointsPerMatch
-        : item.count * settings.pointsPerMatch,
-    });
+      occurrenceCount: 0,
+      matchedInputs: [],
+      matchedSourceSet: new Set(),
+    };
+    current.occurrenceCount += item.count;
+    current.matchedInputs.push(item.identifier);
+    current.matchedSourceSet.add(matchedBy);
+    matchedMap.set(member.id, current);
   }
+
+  const matchedMembers = [...matchedMap.values()].map((item) => ({
+    memberId: item.memberId,
+    name: item.name,
+    studentId: item.studentId,
+    currentScore: item.currentScore,
+    occurrenceCount: item.occurrenceCount,
+    matchedInputs: item.matchedInputs,
+    matchedBy: getMatchedSourceLabel(item.matchedSourceSet),
+    addScore: settings.deduplicateWithinImport
+      ? settings.pointsPerMatch
+      : item.occurrenceCount * settings.pointsPerMatch,
+  }));
+
+  const duplicateNames = [
+    ...matchedMembers
+      .filter((item) => item.occurrenceCount > 1)
+      .map((item) => ({
+        name: item.name,
+        count: item.occurrenceCount,
+      })),
+    ...unmatchedNames.filter((item) => item.count > 1),
+  ];
 
   return {
     type: "score",
@@ -98,7 +192,12 @@ async function previewExcelScoreImport({ buffer, originalName, reason, activityD
   });
 
   const memberNamesSet = new Set(members.map((item) => normalizeName(item.name)));
-  const { sheetName, names, detection } = extractNamesFromWorkbook(buffer, memberNamesSet);
+  const memberStudentIdSet = new Set(
+    members
+      .map((item) => normalizeStudentId(item.studentId))
+      .filter(Boolean),
+  );
+  const { sheetName, names, detection } = extractNamesFromWorkbook(buffer, memberNamesSet, memberStudentIdSet);
 
   const payload = buildScorePreviewPayload({
     names,
@@ -400,7 +499,11 @@ async function confirmManualScoreAdjustment({ token, operatorId }) {
 
 function summarizeMemberImport(rows, existingMembers) {
   const existingByName = new Map(existingMembers.map((item) => [normalizeName(item.name), item]));
-  const existingByStudentId = new Map(existingMembers.map((item) => [item.studentId, item]));
+  const existingByStudentId = new Map(
+    existingMembers
+      .filter((item) => normalizeStudentId(item.studentId))
+      .map((item) => [normalizeStudentId(item.studentId), item]),
+  );
   const duplicateMap = getNameCounts(rows.map((row) => row.name));
   const uploadDuplicates = [...duplicateMap.values()].filter((item) => item.count > 1);
   const invalidRows = [];
@@ -410,48 +513,55 @@ function summarizeMemberImport(rows, existingMembers) {
   const conflicts = [];
 
   for (const row of rows) {
-    if (!row.name || !row.studentId) {
+    const profileData = buildMemberProfilePayload(row);
+    const studentId = normalizeStudentId(profileData.studentId);
+
+    if (!row.name) {
       invalidRows.push({
         rowNumber: row.rowNumber,
         name: row.name,
-        studentId: row.studentId,
+        studentId,
       });
       continue;
     }
 
     const existingByNameRecord = existingByName.get(row.name);
-    const existingByStudentIdRecord = existingByStudentId.get(row.studentId);
+    const existingStudentId = existingByNameRecord ? normalizeStudentId(existingByNameRecord.studentId) : null;
+    const existingByStudentIdRecord = studentId ? existingByStudentId.get(studentId) : null;
 
     if (existingByNameRecord) {
-      if (existingByStudentIdRecord && existingByStudentIdRecord.id !== existingByNameRecord.id) {
+      if (studentId && existingByStudentIdRecord && existingByStudentIdRecord.id !== existingByNameRecord.id) {
         conflicts.push({
           rowNumber: row.rowNumber,
           name: row.name,
-          studentId: row.studentId,
+          studentId,
           message: "该学号已被其他成员占用",
         });
-      } else if (existingByNameRecord.studentId === row.studentId) {
-        sameAsExisting.push({
-          rowNumber: row.rowNumber,
-          name: row.name,
-          studentId: row.studentId,
-        });
       } else {
-        toUpdate.push({
-          rowNumber: row.rowNumber,
-          name: row.name,
-          oldStudentId: existingByNameRecord.studentId,
-          newStudentId: row.studentId,
-        });
+        const changes = getMemberProfileChanges(existingByNameRecord, profileData);
+        if (changes.length === 0) {
+          sameAsExisting.push({
+            rowNumber: row.rowNumber,
+            name: row.name,
+            studentId: existingStudentId,
+          });
+        } else {
+          toUpdate.push({
+            rowNumber: row.rowNumber,
+            name: row.name,
+            studentId: studentId || existingStudentId,
+            changes,
+          });
+        }
       }
       continue;
     }
 
-    if (existingByStudentIdRecord) {
+    if (studentId && existingByStudentIdRecord) {
       conflicts.push({
         rowNumber: row.rowNumber,
         name: row.name,
-        studentId: row.studentId,
+        studentId,
         message: `该学号已被成员“${existingByStudentIdRecord.name}”使用`,
       });
       continue;
@@ -460,7 +570,7 @@ function summarizeMemberImport(rows, existingMembers) {
     toCreate.push({
       rowNumber: row.rowNumber,
       name: row.name,
-      studentId: row.studentId,
+      ...profileData,
     });
   }
 
@@ -490,6 +600,12 @@ async function previewMemberImport({ buffer, originalName, operatorId }) {
       id: true,
       name: true,
       studentId: true,
+      department: true,
+      politicalStatus: true,
+      college: true,
+      grade: true,
+      major: true,
+      studyStage: true,
     },
   });
 
@@ -550,12 +666,15 @@ async function confirmMemberImport({ token, operatorId, duplicateStrategy, exist
     const conflicts = [];
 
     for (const row of payload.rows) {
-      if (!row.name || !row.studentId) {
+      const profileData = buildMemberProfilePayload(row);
+      const studentId = normalizeStudentId(profileData.studentId);
+
+      if (!row.name) {
         skipped.push({
           rowNumber: row.rowNumber,
           name: row.name,
-          studentId: row.studentId,
-          message: "姓名或学号为空",
+          studentId,
+          message: "姓名为空",
         });
         continue;
       }
@@ -565,7 +684,7 @@ async function confirmMemberImport({ token, operatorId, duplicateStrategy, exist
           skipped.push({
             rowNumber: row.rowNumber,
             name: row.name,
-            studentId: row.studentId,
+            studentId,
             message: "重复姓名已自动忽略后续记录",
           });
           continue;
@@ -574,42 +693,55 @@ async function confirmMemberImport({ token, operatorId, duplicateStrategy, exist
       seenNames.add(row.name);
 
       const byName = await tx.member.findUnique({ where: { name: row.name } });
-      const byStudentId = await tx.member.findUnique({ where: { studentId: row.studentId } });
+      const byStudentId = studentId
+        ? await tx.member.findUnique({ where: { studentId } })
+        : null;
 
       if (byName) {
         if (existingStrategy === "SKIP_EXISTING") {
           skipped.push({
             rowNumber: row.rowNumber,
             name: row.name,
-            studentId: row.studentId,
+            studentId,
             message: "成员已存在，按策略跳过",
           });
           continue;
         }
 
-        if (byStudentId && byStudentId.id !== byName.id) {
+        if (studentId && byStudentId && byStudentId.id !== byName.id) {
           conflicts.push({
             rowNumber: row.rowNumber,
             name: row.name,
-            studentId: row.studentId,
+            studentId,
             message: "学号与现有成员冲突，已跳过",
+          });
+          continue;
+        }
+
+        const updateData = buildMemberUpdateData(byName, profileData);
+        if (Object.keys(updateData).length === 0) {
+          skipped.push({
+            rowNumber: row.rowNumber,
+            name: row.name,
+            studentId: studentId || normalizeStudentId(byName.studentId),
+            message: "成员信息未变化，已跳过",
           });
           continue;
         }
 
         const updatedMember = await tx.member.update({
           where: { id: byName.id },
-          data: { studentId: row.studentId },
+          data: updateData,
         });
         updated.push(updatedMember);
         continue;
       }
 
-      if (byStudentId) {
+      if (studentId && byStudentId) {
         conflicts.push({
           rowNumber: row.rowNumber,
           name: row.name,
-          studentId: row.studentId,
+          studentId,
           message: `学号已被成员“${byStudentId.name}”占用，已跳过`,
         });
         continue;
@@ -618,7 +750,7 @@ async function confirmMemberImport({ token, operatorId, duplicateStrategy, exist
       const createdMember = await tx.member.create({
         data: {
           name: row.name,
-          studentId: row.studentId,
+          ...profileData,
         },
       });
       created.push(createdMember);

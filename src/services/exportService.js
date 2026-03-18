@@ -1,5 +1,10 @@
 const XLSX = require("xlsx");
 
+function displayValue(value, fallback = "无") {
+  const normalized = value == null ? "" : String(value).trim();
+  return normalized || fallback;
+}
+
 function buildWorkbookBuffer(sheetName, rows) {
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.aoa_to_sheet(rows);
@@ -10,10 +15,30 @@ function buildWorkbookBuffer(sheetName, rows) {
 function buildLeaderboardWorkbook(members) {
   const rows = [
     ["排名", "姓名", "学号", "当前积分"],
-    ...members.map((member, index) => [index + 1, member.name, member.studentId, member.score]),
+    ...members.map((member, index) => [index + 1, member.name, displayValue(member.studentId), member.score]),
   ];
 
   return buildWorkbookBuffer("排行榜", rows);
+}
+
+function buildAdminMembersWorkbook(members) {
+  const rows = [
+    ["排名", "姓名", "学号", "所属部门", "政治面貌", "学院", "年级", "专业", "学段", "总积分"],
+    ...members.map((member, index) => [
+      index + 1,
+      member.name,
+      displayValue(member.studentId),
+      displayValue(member.department),
+      displayValue(member.politicalStatus),
+      displayValue(member.college),
+      displayValue(member.grade),
+      displayValue(member.major),
+      displayValue(member.studyStage),
+      member.score,
+    ]),
+  ];
+
+  return buildWorkbookBuffer("学员信息", rows);
 }
 
 function buildCandidatesWorkbook(candidates, options = {}) {
@@ -47,5 +72,6 @@ function buildCandidatesWorkbook(candidates, options = {}) {
 
 module.exports = {
   buildLeaderboardWorkbook,
+  buildAdminMembersWorkbook,
   buildCandidatesWorkbook,
 };

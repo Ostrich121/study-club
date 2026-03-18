@@ -3,11 +3,27 @@ require("dotenv").config();
 const bcrypt = require("bcryptjs");
 const { PrismaClient, CandidateStatus, ImportBatchType, ScoreSourceType } = require("@prisma/client");
 const members = require("./memberSeedData");
+const { loadFourthBoneClassProfiles } = require("../src/utils/memberProfileWorkbook");
 
 const prisma = new PrismaClient();
 
 async function main() {
   const passwordHash = await bcrypt.hash("2025yxs", 10);
+  const placeholderStudentIdPattern = /^2025YXS\d{3}$/;
+  let profileEntries = [];
+
+  try {
+    profileEntries = loadFourthBoneClassProfiles().entries;
+  } catch (error) {
+    console.warn(`未能加载骨干班资料文件，将仅导入基础名单：${error.message}`);
+  }
+
+  const memberProfilesByName = new Map(
+    members.map((member, index) => [
+      member.name,
+      profileEntries[index] || {},
+    ]),
+  );
 
   // 线上部署时会重复执行 seed，这里只在首次初始化时创建默认管理员，避免覆盖线上密码。
   let admin = await prisma.admin.findUnique({
@@ -77,17 +93,48 @@ async function main() {
 
   // 成员基础名单只做缺失补录，不回写已有积分，避免部署时把线上数据重置为种子值。
   for (const member of members) {
+    const profileData = memberProfilesByName.get(member.name) || {};
     const existingMember = await prisma.member.findUnique({
       where: { name: member.name },
-      select: { id: true },
+      select: {
+        id: true,
+        studentId: true,
+        department: true,
+        politicalStatus: true,
+        college: true,
+        grade: true,
+        major: true,
+        studyStage: true,
+      },
     });
 
     if (existingMember) {
+      const updateData = {};
+
+      if (existingMember.studentId && placeholderStudentIdPattern.test(existingMember.studentId)) {
+        updateData.studentId = null;
+      }
+
+      for (const key of ["department", "politicalStatus", "college", "grade", "major", "studyStage"]) {
+        if (!existingMember[key] && profileData[key]) {
+          updateData[key] = profileData[key];
+        }
+      }
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.member.update({
+          where: { id: existingMember.id },
+          data: updateData,
+        });
+      }
       continue;
     }
 
     await prisma.member.create({
-      data: member,
+      data: {
+        ...member,
+        ...profileData,
+      },
     });
   }
 

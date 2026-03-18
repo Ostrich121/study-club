@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderMemberOptions() {
     memberSelect.innerHTML = members.length
       ? members.map((member) => `
-          <option value="${member.id}">${App.escapeHtml(member.name)}（${App.escapeHtml(member.studentId)}，当前 ${member.score} 分）</option>
+          <option value="${member.id}">${App.escapeHtml(member.name)}（${App.escapeHtml(App.formatStudentId(member.studentId))}，当前 ${member.score} 分）</option>
         `).join("")
       : `<option value="">暂无可选成员</option>`;
 
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h4>本次调整预览</h4>
           <div class="pill-list">
             <span class="pill">成员 ${App.escapeHtml(preview.memberName)}</span>
-            <span class="pill">学号 ${App.escapeHtml(preview.studentId)}</span>
+            <span class="pill">学号 ${App.escapeHtml(App.formatStudentId(preview.studentId))}</span>
             <span class="pill">当前积分 ${preview.currentScore}</span>
             <span class="pill ${preview.delta < 0 ? "pill-danger" : ""}">调整 ${App.formatSignedNumber(preview.delta)} 分</span>
             <span class="pill">调整后 ${preview.nextScore} 分</span>

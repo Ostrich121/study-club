@@ -24,29 +24,29 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="pill">原始人数 ${preview.summary.inputCount}</span>
             <span class="pill">匹配成功 ${preview.summary.matchedCount}</span>
             <span class="pill">未匹配 ${preview.summary.unmatchedCount}</span>
-            <span class="pill">重复姓名 ${preview.summary.duplicateCount}</span>
+            <span class="pill">重复识别 ${preview.summary.duplicateCount}</span>
             <span class="pill">本次预计新增积分 ${preview.summary.totalAddedScore}</span>
           </div>
-          <p class="hint">工作表：${App.escapeHtml(preview.extraMeta.sheetName)}；识别列：${App.escapeHtml(preview.extraMeta.detectedColumn)}；重复处理规则：${preview.settingsSnapshot.deduplicateWithinImport ? "同名只加 1 次" : "按出现次数累计"}。</p>
+          <p class="hint">工作表：${App.escapeHtml(preview.extraMeta.sheetName)}；识别列：${App.escapeHtml(preview.extraMeta.detectedColumn)}；重复处理规则：${preview.settingsSnapshot.deduplicateWithinImport ? "同一成员只加 1 次" : "按识别次数累计"}。</p>
         </div>
         <div class="preview-grid">
           <div class="list-card">
             <h4>匹配成功成员</h4>
             ${preview.matchedMembers.length
-              ? `<ul>${preview.matchedMembers.map((item) => `<li>${App.escapeHtml(item.name)}（${App.escapeHtml(item.studentId)}）+${item.addScore} 分</li>`).join("")}</ul>`
+              ? `<ul>${preview.matchedMembers.map((item) => `<li>${App.escapeHtml(item.name)}（${App.escapeHtml(App.formatStudentId(item.studentId))}，通过${App.escapeHtml(item.matchedBy)}识别）+${item.addScore} 分</li>`).join("")}</ul>`
               : `<div class="empty-state">没有匹配到成员</div>`}
           </div>
           <div class="highlight-danger">
-            <h4>未匹配姓名</h4>
+            <h4>未匹配姓名/学号</h4>
             ${preview.unmatchedNames.length
               ? `<ul>${preview.unmatchedNames.map((item) => `<li>${App.escapeHtml(item.name)}（出现 ${item.count} 次）</li>`).join("")}</ul>`
               : `<div class="empty-state">全部匹配成功</div>`}
           </div>
           <div class="highlight-warning">
-            <h4>重复姓名</h4>
+            <h4>重复识别成员</h4>
             ${preview.duplicateNames.length
               ? `<ul>${preview.duplicateNames.map((item) => `<li>${App.escapeHtml(item.name)}（出现 ${item.count} 次）</li>`).join("")}</ul>`
-              : `<div class="empty-state">没有重复姓名</div>`}
+              : `<div class="empty-state">没有重复识别</div>`}
           </div>
           <div class="list-card">
             <h4>本次处理来源</h4>

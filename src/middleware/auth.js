@@ -15,7 +15,17 @@ function requireAdminPage(req, res, next) {
   next();
 }
 
+function requireStudentApi(req, res, next) {
+  if (!req.session || !req.session.student) {
+    return res.status(401).json({ message: "请先登录学员账号" });
+  }
+
+  req.student = req.session.student;
+  next();
+}
+
 module.exports = {
   requireAdminApi,
   requireAdminPage,
+  requireStudentApi,
 };

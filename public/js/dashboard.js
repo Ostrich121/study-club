@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const settingsForm = document.getElementById("settings-form");
   const saveButton = document.getElementById("save-settings-btn");
+  const changePasswordForm = document.getElementById("change-password-form");
+  const changePasswordButton = document.getElementById("change-password-btn");
 
   async function loadOverview() {
     try {
@@ -17,7 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <tr>
               <td class="rank-cell">#${index + 1}</td>
               <td>${App.escapeHtml(member.name)}</td>
-              <td>${App.escapeHtml(member.studentId)}</td>
+              <td>${App.escapeHtml(App.formatStudentId(member.studentId))}</td>
               <td><span class="score-badge">${member.score} 分</span></td>
             </tr>
           `).join("")
@@ -58,6 +60,29 @@ document.addEventListener("DOMContentLoaded", () => {
       App.showToast(error.message, "error");
     } finally {
       App.setButtonBusy(saveButton, false);
+    }
+  });
+
+  changePasswordForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    App.setButtonBusy(changePasswordButton, true, "保存中...");
+
+    try {
+      const currentPassword = document.getElementById("current-password").value;
+      const nextPassword = document.getElementById("next-password").value;
+      const confirmPassword = document.getElementById("confirm-password").value;
+
+      await App.request("/api/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify({ currentPassword, nextPassword, confirmPassword }),
+      });
+
+      changePasswordForm.reset();
+      App.showToast("管理员密码已更新");
+    } catch (error) {
+      App.showToast(error.message, "error");
+    } finally {
+      App.setButtonBusy(changePasswordButton, false);
     }
   });
 

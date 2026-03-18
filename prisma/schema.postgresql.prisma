@@ -46,13 +46,20 @@ model Admin {
 }
 
 model Member {
-  id         Int        @id @default(autoincrement())
-  name       String     @unique
-  studentId  String     @unique
-  score      Int        @default(0)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
-  scoreLogs  ScoreLog[]
+  id              Int        @id @default(autoincrement())
+  name            String     @unique
+  studentId       String?    @unique
+  studentPasswordEnabled Boolean @default(false)
+  department      String?
+  politicalStatus String?
+  college         String?
+  grade           String?
+  major           String?
+  studyStage      String?
+  score           Int        @default(0)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  scoreLogs       ScoreLog[]
 }
 
 model ImportBatch {

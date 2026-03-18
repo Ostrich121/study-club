@@ -62,6 +62,10 @@ app.get("/login.html", (req, res) => {
   res.sendFile(path.join(publicDir, "login.html"));
 });
 
+app.get("/student.html", (req, res) => {
+  res.sendFile(path.join(publicDir, "student.html"));
+});
+
 app.get("/pages/signup.html", (req, res) => {
   res.sendFile(path.join(publicDir, "pages", "signup.html"));
 });

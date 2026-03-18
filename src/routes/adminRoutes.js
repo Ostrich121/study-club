@@ -14,8 +14,11 @@ const {
   previewMemberImport,
   confirmMemberImport,
 } = require("../services/importService");
-const { buildCandidatesWorkbook } = require("../services/exportService");
-const { sortMembersByScoreThenName } = require("../utils/name");
+const { buildCandidatesWorkbook, buildAdminMembersWorkbook } = require("../services/exportService");
+const { sortMembersByScoreThenName, normalizeName, splitPastedNames } = require("../utils/name");
+const { buildMemberProfilePayload, getMemberProfileChanges } = require("../utils/memberProfile");
+const { loadFourthBoneClassProfiles } = require("../utils/memberProfileWorkbook");
+const memberSeedData = require("../../prisma/memberSeedData");
 
 const router = express.Router();
 const upload = multer({
@@ -27,6 +30,64 @@ const upload = multer({
 
 function asyncHandler(fn) {
   return (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+}
+
+function normalizeMemberKeyword(value) {
+  return String(value || "").replace(/\s+/g, "").trim().toUpperCase();
+}
+
+function resolveMembersByKeywords(members, rawKeywords) {
+  const uniqueKeywords = [...new Set(splitPastedNames(rawKeywords))];
+  const memberByName = new Map(members.map((member) => [normalizeMemberKeyword(normalizeName(member.name)), member]));
+  const memberByStudentId = new Map(
+    members
+      .filter((member) => member.studentId)
+      .map((member) => [normalizeMemberKeyword(member.studentId), member]),
+  );
+  const matchedMap = new Map();
+  const unmatchedKeywords = [];
+
+  for (const keyword of uniqueKeywords) {
+    const normalizedKeyword = normalizeMemberKeyword(keyword);
+    const byStudentId = memberByStudentId.get(normalizedKeyword);
+    const byName = memberByName.get(normalizedKeyword);
+    const target = byStudentId || byName;
+    const matchedBy = byStudentId ? "学号" : "姓名";
+
+    if (!target) {
+      unmatchedKeywords.push(keyword);
+      continue;
+    }
+
+    const current = matchedMap.get(target.id) || {
+      ...target,
+      matchedKeywords: [],
+      matchedBySet: new Set(),
+    };
+    current.matchedKeywords.push(keyword);
+    current.matchedBySet.add(matchedBy);
+    matchedMap.set(target.id, current);
+  }
+
+  return {
+    inputKeywords: uniqueKeywords,
+    matchedMembers: sortMembersByScoreThenName(
+      [...matchedMap.values()].map((item) => ({
+        ...item,
+        matchedKeywords: item.matchedKeywords,
+        matchedBy: item.matchedBySet.size > 1 ? "姓名/学号" : [...item.matchedBySet][0],
+      })),
+    ),
+    unmatchedKeywords,
+  };
+}
+
+function buildAdminMemberPayload(body) {
+  const name = String(body.name || "").replace(/\s+/g, "").trim();
+  return {
+    name,
+    ...buildMemberProfilePayload(body),
+  };
 }
 
 router.use(requireAdminApi);
@@ -83,6 +144,12 @@ router.get("/members", asyncHandler(async (req, res) => {
           OR: [
             { name: { contains: search } },
             { studentId: { contains: search } },
+            { department: { contains: search } },
+            { politicalStatus: { contains: search } },
+            { college: { contains: search } },
+            { grade: { contains: search } },
+            { major: { contains: search } },
+            { studyStage: { contains: search } },
           ],
         }
       : undefined,
@@ -93,19 +160,35 @@ router.get("/members", asyncHandler(async (req, res) => {
   });
 }));
 
-router.post("/members", asyncHandler(async (req, res) => {
-  const name = String(req.body.name || "").replace(/\s+/g, "").trim();
-  const studentId = String(req.body.studentId || "").trim();
+router.post("/members/batch-query", asyncHandler(async (req, res) => {
+  const text = String(req.body.text || "");
+  const members = await prisma.member.findMany();
+  const result = resolveMembersByKeywords(members, text);
 
-  if (!name || !studentId) {
-    return res.status(400).json({ message: "姓名和学号不能为空" });
+  if (result.inputKeywords.length === 0) {
+    return res.status(400).json({ message: "请先输入要查询的姓名或学号" });
+  }
+
+  return res.json({
+    matchedMembers: result.matchedMembers,
+    unmatchedKeywords: result.unmatchedKeywords,
+    summary: {
+      inputCount: result.inputKeywords.length,
+      matchedCount: result.matchedMembers.length,
+      unmatchedCount: result.unmatchedKeywords.length,
+    },
+  });
+}));
+
+router.post("/members", asyncHandler(async (req, res) => {
+  const payload = buildAdminMemberPayload(req.body);
+
+  if (!payload.name) {
+    return res.status(400).json({ message: "姓名不能为空" });
   }
 
   const member = await prisma.member.create({
-    data: {
-      name,
-      studentId,
-    },
+    data: payload,
   });
 
   return res.json({
@@ -116,19 +199,22 @@ router.post("/members", asyncHandler(async (req, res) => {
 
 router.put("/members/:id", asyncHandler(async (req, res) => {
   const memberId = Number.parseInt(req.params.id, 10);
-  const name = String(req.body.name || "").replace(/\s+/g, "").trim();
-  const studentId = String(req.body.studentId || "").trim();
+  const payload = buildAdminMemberPayload(req.body);
 
-  if (!name || !studentId) {
-    return res.status(400).json({ message: "姓名和学号不能为空" });
+  if (!payload.name) {
+    return res.status(400).json({ message: "姓名不能为空" });
+  }
+
+  const existingMember = await prisma.member.findUnique({
+    where: { id: memberId },
+  });
+  if (!existingMember) {
+    return res.status(404).json({ message: "成员不存在" });
   }
 
   const member = await prisma.member.update({
     where: { id: memberId },
-    data: {
-      name,
-      studentId,
-    },
+    data: payload,
   });
 
   return res.json({
@@ -152,6 +238,146 @@ router.delete("/members/:id", asyncHandler(async (req, res) => {
   });
 
   return res.json({ message: "成员已删除" });
+}));
+
+router.post("/members/fourth-bone-class/sync", asyncHandler(async (req, res) => {
+  const { entries } = loadFourthBoneClassProfiles();
+  if (entries.length !== memberSeedData.length) {
+    return res.status(400).json({
+      message: `骨干班资料行数为 ${entries.length}，与基础名单 ${memberSeedData.length} 人不一致，无法按顺序同步`,
+    });
+  }
+
+  const updated = [];
+  const skipped = [];
+
+  for (let index = 0; index < memberSeedData.length; index += 1) {
+    const seedMember = memberSeedData[index];
+    const profileEntry = entries[index];
+    const member = await prisma.member.findUnique({
+      where: { name: seedMember.name },
+    });
+
+    if (!member) {
+      skipped.push({
+        name: seedMember.name,
+        message: "成员库中未找到该姓名，已跳过",
+      });
+      continue;
+    }
+
+    const changes = getMemberProfileChanges(member, profileEntry);
+    if (changes.length === 0) {
+      skipped.push({
+        name: member.name,
+        message: "资料未变化，已跳过",
+      });
+      continue;
+    }
+
+    const nextData = {};
+    for (const change of changes) {
+      nextData[change.key] = change.newValue;
+    }
+
+    await prisma.member.update({
+      where: { id: member.id },
+      data: nextData,
+    });
+
+    updated.push({
+      name: member.name,
+      changes,
+    });
+  }
+
+  return res.json({
+    message: updated.length
+      ? `已同步 ${updated.length} 名学员的骨干班资料`
+      : "没有可同步的资料变更",
+    result: {
+      updatedCount: updated.length,
+      skippedCount: skipped.length,
+      updated,
+      skipped,
+    },
+  });
+}));
+
+router.post("/members/batch-delete", asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+  const parsedIds = [...new Set(
+    ids
+      .map((item) => Number.parseInt(item, 10))
+      .filter((item) => Number.isInteger(item) && item > 0),
+  )];
+
+  if (parsedIds.length === 0) {
+    return res.status(400).json({ message: "请先选择要删除的成员" });
+  }
+
+  const members = await prisma.member.findMany({
+    where: { id: { in: parsedIds } },
+    select: { id: true, name: true },
+  });
+
+  const deleted = [];
+  const skipped = [];
+
+  for (const memberId of parsedIds) {
+    const member = members.find((item) => item.id === memberId);
+    if (!member) {
+      skipped.push({
+        id: memberId,
+        message: "成员不存在或已删除",
+      });
+      continue;
+    }
+
+    const logCount = await prisma.scoreLog.count({
+      where: { memberId },
+    });
+
+    if (logCount > 0) {
+      skipped.push({
+        id: memberId,
+        name: member.name,
+        message: "该成员已有积分日志，暂不支持直接删除",
+      });
+      continue;
+    }
+
+    await prisma.member.delete({
+      where: { id: memberId },
+    });
+
+    deleted.push({
+      id: member.id,
+      name: member.name,
+    });
+  }
+
+  return res.json({
+    message: deleted.length
+      ? `已删除 ${deleted.length} 名成员`
+      : "未删除任何成员",
+    result: {
+      deletedCount: deleted.length,
+      skippedCount: skipped.length,
+      deleted,
+      skipped,
+    },
+  });
+}));
+
+router.get("/members/export", asyncHandler(async (req, res) => {
+  const members = await prisma.member.findMany();
+  const sortedMembers = sortMembersByScoreThenName(members);
+  const buffer = buildAdminMembersWorkbook(sortedMembers);
+
+  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+  res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent("研习社学员信息导出.xlsx")}"`);
+  res.send(buffer);
 }));
 
 router.post("/members/import/preview", upload.single("file"), asyncHandler(async (req, res) => {

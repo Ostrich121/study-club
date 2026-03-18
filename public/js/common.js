@@ -88,6 +88,15 @@ window.App = (() => {
       .replace(/'/g, "&#39;");
   }
 
+  function formatDisplayValue(value, fallback = "无") {
+    const normalized = value == null ? "" : String(value).trim();
+    return normalized || fallback;
+  }
+
+  function formatStudentId(value) {
+    return formatDisplayValue(value, "无");
+  }
+
   function renderStatusTag(status) {
     const map = {
       PENDING: { text: "待处理", cls: "tag-warning" },
@@ -123,6 +132,8 @@ window.App = (() => {
     showToast,
     formatDate,
     escapeHtml,
+    formatDisplayValue,
+    formatStudentId,
     renderStatusTag,
     formatSignedNumber,
     setButtonBusy,

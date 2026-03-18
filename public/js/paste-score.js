@@ -25,28 +25,28 @@ document.addEventListener("DOMContentLoaded", () => {
             <span class="pill">去重后 ${preview.summary.uniqueCount}</span>
             <span class="pill">匹配成功 ${preview.summary.matchedCount}</span>
             <span class="pill">未匹配 ${preview.summary.unmatchedCount}</span>
-            <span class="pill">重复姓名 ${preview.summary.duplicateCount}</span>
+            <span class="pill">重复识别 ${preview.summary.duplicateCount}</span>
           </div>
-          <p class="hint">当前规则：每次匹配 ${preview.settingsSnapshot.pointsPerMatch} 分；${preview.settingsSnapshot.deduplicateWithinImport ? "同一批次重复姓名默认只加 1 次" : "同一批次重复姓名将按出现次数累计"}。</p>
+          <p class="hint">当前规则：每次匹配 ${preview.settingsSnapshot.pointsPerMatch} 分；${preview.settingsSnapshot.deduplicateWithinImport ? "同一批次同一成员默认只加 1 次" : "同一批次按识别次数累计"}。</p>
         </div>
         <div class="preview-grid">
           <div class="list-card">
             <h4>匹配成功成员</h4>
             ${preview.matchedMembers.length
-              ? `<ul>${preview.matchedMembers.map((item) => `<li>${App.escapeHtml(item.name)} +${item.addScore} 分</li>`).join("")}</ul>`
+              ? `<ul>${preview.matchedMembers.map((item) => `<li>${App.escapeHtml(item.name)}（通过${App.escapeHtml(item.matchedBy)}识别）+${item.addScore} 分</li>`).join("")}</ul>`
               : `<div class="empty-state">没有匹配到成员</div>`}
           </div>
           <div class="highlight-danger">
-            <h4>未匹配姓名</h4>
+            <h4>未匹配姓名/学号</h4>
             ${preview.unmatchedNames.length
               ? `<ul>${preview.unmatchedNames.map((item) => `<li>${App.escapeHtml(item.name)}（出现 ${item.count} 次）</li>`).join("")}</ul>`
               : `<div class="empty-state">全部匹配成功</div>`}
           </div>
           <div class="highlight-warning">
-            <h4>重复姓名</h4>
+            <h4>重复识别成员</h4>
             ${preview.duplicateNames.length
               ? `<ul>${preview.duplicateNames.map((item) => `<li>${App.escapeHtml(item.name)}（出现 ${item.count} 次）</li>`).join("")}</ul>`
-              : `<div class="empty-state">没有重复姓名</div>`}
+              : `<div class="empty-state">没有重复识别</div>`}
           </div>
           <div class="list-card">
             <h4>本次加分原因</h4>

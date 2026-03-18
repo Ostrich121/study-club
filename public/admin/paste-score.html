@@ -10,12 +10,12 @@
   <div id="admin-shell"></div>
   <div data-admin-content hidden>
     <section class="card">
-      <div class="section-header">
-        <div>
-          <h2>直接粘贴名单加分</h2>
-          <p>系统会自动拆分名字并匹配成员库，先预览后确认。</p>
+        <div class="section-header">
+          <div>
+            <h2>直接粘贴名单加分</h2>
+            <p>系统会自动拆分姓名或学号并匹配成员库，先预览后确认。</p>
+          </div>
         </div>
-      </div>
       <form id="paste-score-form">
         <div class="field">
           <label for="paste-reason">本次加分原因</label>
@@ -27,7 +27,7 @@
         </div>
         <div class="field page-section">
           <label for="paste-names">名单内容</label>
-          <textarea id="paste-names" placeholder="支持换行、空格、逗号、中文逗号、顿号等分隔方式"></textarea>
+          <textarea id="paste-names" placeholder="支持换行、空格、逗号、中文逗号、顿号等分隔方式，可混合粘贴姓名和学号"></textarea>
         </div>
         <div class="form-actions">
           <button class="btn" id="paste-preview-btn" type="submit">生成预览</button>

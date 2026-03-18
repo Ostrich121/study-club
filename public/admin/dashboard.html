@@ -63,10 +63,10 @@
               <input id="points-per-match" type="number" min="1" value="1" />
             </div>
             <div class="field">
-              <label for="deduplicate-within-import">同表重复姓名处理</label>
+              <label for="deduplicate-within-import">同表重复成员处理</label>
               <select id="deduplicate-within-import">
-                <option value="true">同名默认只加 1 次</option>
-                <option value="false">同名按出现次数累计</option>
+                <option value="true">同一成员默认只加 1 次</option>
+                <option value="false">同一成员按出现次数累计</option>
               </select>
             </div>
           </div>
@@ -75,6 +75,35 @@
           </div>
           <p class="hint">当前设置将影响 Excel 与粘贴名单加分预览结果。</p>
         </form>
+
+        <div class="page-section settings-subsection">
+          <div class="section-header">
+            <div>
+              <h3>管理员密码修改</h3>
+              <p>修改成功后，管理员下次登录请使用新密码。</p>
+            </div>
+          </div>
+          <form id="change-password-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="current-password">当前密码</label>
+                <input id="current-password" type="password" placeholder="请输入当前管理员密码" />
+              </div>
+              <div class="field">
+                <label for="next-password">新密码</label>
+                <input id="next-password" type="password" placeholder="请输入新的管理员密码" />
+              </div>
+              <div class="field">
+                <label for="confirm-password">确认新密码</label>
+                <input id="confirm-password" type="password" placeholder="请再次输入新密码" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn" id="change-password-btn" type="submit">保存新密码</button>
+            </div>
+            <p class="hint">建议使用更安全、便于内部保管的新密码，长度不少于 6 位。</p>
+          </form>
+        </div>
       </div>
 
       <div class="card">

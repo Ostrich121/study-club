@@ -6,7 +6,7 @@
   <title>成员管理</title>
   <link rel="stylesheet" href="/css/app.css" />
 </head>
-<body data-page="members" data-title="成员管理页" data-subtitle="支持成员增删改查与基础名单上传">
+<body data-page="members" data-title="成员管理页" data-subtitle="支持学员基础信息、骨干班资料与批量操作统一管理">
   <div id="admin-shell"></div>
   <div data-admin-content hidden>
     <section class="grid-2">
@@ -14,7 +14,7 @@
         <div class="section-header">
           <div>
             <h2 id="member-form-title">新增成员</h2>
-            <p>姓名是积分匹配核心字段，系统内不允许重名</p>
+            <p>姓名是积分匹配核心字段，系统内不允许重名；未录入学号时前后台统一显示“无”</p>
           </div>
         </div>
         <form id="member-form">
@@ -25,7 +25,35 @@
             </div>
             <div class="field">
               <label for="member-student-id">学号</label>
-              <input id="member-student-id" placeholder="请输入学号" />
+              <input id="member-student-id" placeholder="可暂不填写，未录入时显示为无" />
+            </div>
+          </div>
+          <div class="form-grid-3 page-section">
+            <div class="field">
+              <label for="member-department">所属部门</label>
+              <input id="member-department" placeholder="例如：宣传部" />
+            </div>
+            <div class="field">
+              <label for="member-political-status">政治面貌</label>
+              <input id="member-political-status" placeholder="例如：中共党员 / 共青团员" />
+            </div>
+            <div class="field">
+              <label for="member-study-stage">学段</label>
+              <input id="member-study-stage" placeholder="例如：本科生 / 硕士研究生" />
+            </div>
+          </div>
+          <div class="form-grid-3 page-section">
+            <div class="field">
+              <label for="member-college">学院</label>
+              <input id="member-college" placeholder="例如：经济与管理学院" />
+            </div>
+            <div class="field">
+              <label for="member-grade">年级</label>
+              <input id="member-grade" placeholder="例如：2025级" />
+            </div>
+            <div class="field">
+              <label for="member-major">专业</label>
+              <input id="member-major" placeholder="例如：金融学" />
             </div>
           </div>
           <div class="form-actions">
@@ -38,8 +66,8 @@
       <div class="card">
         <div class="section-header">
           <div>
-            <h2>上传成员基础名单</h2>
-            <p>支持 Excel 预览后确认导入</p>
+            <h2>批量新增 / 更新学员信息</h2>
+            <p>支持 Excel 预览后确认导入；可同时维护学号、部门、政治面貌、学院、年级、专业、学段</p>
           </div>
         </div>
         <form id="member-import-form">
@@ -47,6 +75,7 @@
             <label for="member-import-file">名单文件</label>
             <input id="member-import-file" type="file" name="file" accept=".xlsx,.xls,.csv" />
           </div>
+          <p class="hint">支持列名：姓名、学号、所属部门、政治面貌、学院、年级、专业、学段；也支持使用“学院年级专业”这一列自动拆分。</p>
           <div class="form-grid">
             <div class="field">
               <label for="duplicate-strategy">上传名单中有重复姓名时</label>
@@ -58,7 +87,7 @@
             <div class="field">
               <label for="existing-strategy">成员已存在时</label>
               <select id="existing-strategy">
-                <option value="UPDATE_EXISTING">更新已有成员的学号</option>
+                <option value="UPDATE_EXISTING">补录或更新已有成员的学号</option>
                 <option value="SKIP_EXISTING">跳过已有成员</option>
               </select>
             </div>
@@ -68,6 +97,58 @@
             <button class="btn-secondary" id="confirm-member-import-btn" type="button" disabled>确认导入成员</button>
           </div>
         </form>
+      </div>
+    </section>
+
+    <section class="page-section grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>批量查询学员信息</h2>
+            <p>支持一次输入多个姓名或学号，快速核对成员资料</p>
+          </div>
+        </div>
+        <form id="member-batch-query-form">
+          <div class="field">
+            <label for="member-batch-query-text">查询内容</label>
+            <textarea id="member-batch-query-text" placeholder="支持换行、空格、逗号、顿号等分隔方式，可混合输入姓名和学号"></textarea>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="member-batch-query-btn" type="submit">批量查询</button>
+            <button class="btn-secondary" id="member-batch-query-reset-btn" type="button">清空查询</button>
+          </div>
+        </form>
+        <div class="page-section" id="member-batch-query-result">
+          <div class="empty-state">输入多个姓名或学号后，这里会显示匹配到的学员信息和未匹配项。</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>批量同步与导出</h2>
+            <p>支持一键同步第四期骨干班资料，并导出当前更新后的学员信息</p>
+          </div>
+        </div>
+        <div class="panel-list">
+          <div class="highlight-warning">
+            <h4>第四期骨干班资料同步</h4>
+            <p>将按你提供的两份 70 人名单顺序一一对应，同步所属部门、政治面貌、学院、年级、专业、学段，不显示班级。</p>
+            <div class="form-actions">
+              <button class="btn" id="sync-fourth-profile-btn" type="button">同步第四期骨干班资料</button>
+            </div>
+          </div>
+          <div class="highlight-success">
+            <h4>导出学员信息</h4>
+            <p>导出内容包含：排名、姓名、学号、所属部门、政治面貌、学院、年级、专业、学段、总积分。</p>
+            <div class="form-actions">
+              <button class="btn-secondary" id="export-members-btn" type="button">导出当前学员信息 Excel</button>
+            </div>
+          </div>
+        </div>
+        <div class="page-section" id="member-batch-tool-result">
+          <div class="empty-state">同步或导出后的处理结果会显示在这里。</div>
+        </div>
       </div>
     </section>
 
@@ -87,14 +168,14 @@
       <div class="section-header">
         <div>
           <h2>成员列表</h2>
-          <p>支持姓名和学号搜索</p>
+          <p>支持姓名、学号、部门、政治面貌、学院、年级、专业、学段搜索</p>
         </div>
       </div>
       <form id="member-search-form">
         <div class="form-grid">
           <div class="field">
             <label for="member-search">搜索关键词</label>
-            <input id="member-search" placeholder="输入姓名或学号" />
+            <input id="member-search" placeholder="输入姓名、学号、学院、专业等关键词" />
           </div>
           <div class="field">
             <label>&nbsp;</label>
@@ -102,12 +183,26 @@
           </div>
         </div>
       </form>
+      <div class="selection-toolbar page-section">
+        <div class="selection-summary">已选中 <strong id="selected-member-count">0</strong> 名学员</div>
+        <div class="inline-actions">
+          <button class="btn-danger" id="delete-selected-members-btn" type="button" disabled>删除选中学员</button>
+          <button class="btn-secondary" id="clear-selected-members-btn" type="button" disabled>清空选择</button>
+        </div>
+      </div>
       <div class="table-wrap page-section">
         <table>
           <thead>
             <tr>
+              <th><input id="member-select-all" type="checkbox" /></th>
               <th>姓名</th>
               <th>学号</th>
+              <th>所属部门</th>
+              <th>政治面貌</th>
+              <th>学院</th>
+              <th>年级</th>
+              <th>专业</th>
+              <th>学段</th>
               <th>当前积分</th>
               <th>更新时间</th>
               <th>操作</th>
