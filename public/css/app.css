@@ -684,6 +684,95 @@ tbody tr:hover {
   grid-template-columns: 280px 1fr;
 }
 
+.admin-home-shell {
+  min-height: 100vh;
+  padding: 28px;
+  background:
+    radial-gradient(circle at top, rgba(255, 220, 138, 0.14), transparent 20%),
+    linear-gradient(180deg, #7f0e17, #9b1420 48%, #5d0910 100%);
+}
+
+.admin-home-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 28px;
+  color: rgba(255, 244, 214, 0.92);
+}
+
+.admin-home-topbar .brand p {
+  color: rgba(255, 234, 185, 0.76);
+}
+
+.admin-home-main {
+  display: grid;
+  place-items: center;
+}
+
+.admin-home-panel {
+  width: min(1080px, 100%);
+  padding: 34px;
+  border-radius: 32px;
+  background:
+    linear-gradient(180deg, rgba(255, 249, 237, 0.99), rgba(255, 242, 214, 0.97));
+  border: 1px solid rgba(248, 223, 154, 0.22);
+  box-shadow:
+    0 28px 52px rgba(52, 5, 10, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}
+
+.admin-home-panel > .tag {
+  margin-bottom: 14px;
+}
+
+.admin-home-panel h1 {
+  margin: 0 0 10px;
+  color: #7d1318;
+  font-size: clamp(32px, 4vw, 42px);
+  line-height: 1.2;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.admin-home-panel > p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.75;
+  font-size: 16px;
+}
+
+.admin-home-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 28px;
+}
+
+.admin-home-card {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 24px;
+  text-decoration: none;
+  border: 1px solid rgba(175, 24, 34, 0.12);
+  box-shadow: 0 18px 34px rgba(92, 8, 18, 0.08);
+}
+
+.admin-home-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(175, 24, 34, 0.22);
+  box-shadow: 0 24px 42px rgba(92, 8, 18, 0.14);
+}
+
+.admin-home-card .module-card-head {
+  align-items: center;
+}
+
+.admin-home-card h3 {
+  margin-top: 0;
+}
+
 .sidebar {
   padding: 28px 22px;
   background:
@@ -703,6 +792,21 @@ tbody tr:hover {
 
 .sidebar .brand p {
   color: rgba(255, 234, 185, 0.72);
+}
+
+.sidebar-brand-title {
+  display: grid;
+  gap: 2px;
+  margin: 0 0 4px;
+  font-size: 18px !important;
+  line-height: 1.25;
+  letter-spacing: 0.03em;
+}
+
+.sidebar-brand-title span:last-child {
+  font-size: 14px;
+  letter-spacing: 0.02em;
+  opacity: 0.92;
 }
 
 .sidebar-intro {
@@ -804,7 +908,45 @@ tbody tr:hover {
     linear-gradient(180deg, #8f111b, #b71922);
 }
 
-.auth-cover h1 {
+.auth-cover-minimal {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  justify-items: center;
+  gap: 22px;
+  text-align: center;
+}
+
+.auth-cover-logo {
+  width: min(260px, 68%);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 30px rgba(68, 8, 14, 0.22));
+}
+
+.auth-cover-title {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.auth-cover-title span:first-child {
+  font-size: clamp(28px, 3vw, 34px);
+  line-height: 1.2;
+  color: #f8df9a;
+}
+
+.auth-cover-title-sub {
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.2;
+  color: rgba(255, 239, 204, 0.88);
+  letter-spacing: 0.06em;
+}
+
+.auth-cover h1:not(.auth-cover-title) {
   font-size: 34px;
   line-height: 1.2;
   margin: 0 0 16px;
@@ -856,21 +998,37 @@ tbody tr:hover {
   max-width: 340px;
   padding: 14px 16px;
   border-radius: 16px;
-  color: #fff;
-  box-shadow: 0 16px 34px rgba(72, 7, 14, 0.2);
+  color: #7a1518;
+  border: 1px solid rgba(248, 223, 154, 0.34);
+  background: linear-gradient(180deg, rgba(255, 249, 237, 0.99), rgba(255, 242, 214, 0.97));
+  box-shadow:
+    0 16px 34px rgba(72, 7, 14, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
   animation: slide-in 0.22s ease;
 }
 
 .toast-success {
-  background: linear-gradient(135deg, #11885d, #1e9b6e);
+  border-color: rgba(210, 163, 62, 0.48);
+  background:
+    radial-gradient(circle at top right, rgba(248, 223, 154, 0.3), transparent 40%),
+    linear-gradient(180deg, rgba(255, 249, 237, 0.99), rgba(255, 242, 214, 0.97));
 }
 
 .toast-error {
-  background: linear-gradient(135deg, #d9485f, #ef6a7d);
+  color: #fff3cf;
+  border-color: rgba(248, 223, 154, 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(248, 223, 154, 0.16), transparent 38%),
+    linear-gradient(135deg, rgba(143, 17, 27, 0.98), rgba(183, 25, 34, 0.96));
 }
 
 .toast-info {
-  background: linear-gradient(135deg, #8f111b, #b71922);
+  color: #fff3cf;
+  border-color: rgba(248, 223, 154, 0.24);
+  background:
+    radial-gradient(circle at top right, rgba(248, 223, 154, 0.18), transparent 38%),
+    linear-gradient(135deg, rgba(126, 15, 22, 0.98), rgba(161, 20, 31, 0.96));
 }
 
 .status-dot {
@@ -1140,6 +1298,14 @@ tbody tr:hover {
   font-weight: 700;
   color: #f8df9a;
   text-shadow: 0 2px 10px rgba(70, 17, 0, 0.35);
+}
+
+.portal-title-club-sub {
+  font-size: clamp(16px, 2.3vw, 20px);
+  font-weight: 600;
+  color: #f6d98b;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 10px rgba(70, 17, 0, 0.3);
 }
 
 .portal-title-theme {
@@ -1687,11 +1853,20 @@ body.portal-page-switching .student-shell {
   margin-bottom: 18px;
 }
 
+.study-report-topbar > div:first-child {
+  min-width: 0;
+  flex: 1;
+}
+
 .study-report-topbar h2 {
   margin: 0 0 6px;
-  font-size: 32px;
+  font-size: clamp(20px, 2.5vw, 28px);
   font-family: var(--font-display);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .study-report-topbar p {
@@ -1924,17 +2099,24 @@ body.portal-page-switching .student-shell {
 .ranking-main {
   display: grid;
   gap: 2px;
+  min-width: 0;
 }
 
 .ranking-main strong {
   font-size: 16px;
   line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ranking-main small {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .ranking-score {
@@ -1942,6 +2124,7 @@ body.portal-page-switching .student-shell {
   font-weight: 800;
   font-size: 16px;
   white-space: nowrap;
+  justify-self: end;
 }
 
 .ranking-modal {
@@ -1987,7 +2170,7 @@ body.portal-page-switching .student-shell {
 .module-stat-grid {
   display: grid;
   gap: 16px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .stat-value-sm {
@@ -2021,7 +2204,8 @@ body.portal-page-switching .student-shell {
   .admin-page-hero,
   .identity-hero,
   .module-grid,
-  .module-stat-grid {
+  .module-stat-grid,
+  .admin-home-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2048,6 +2232,19 @@ body.portal-page-switching .student-shell {
 
   .admin-main {
     padding: 18px;
+  }
+
+  .admin-home-shell {
+    padding: 18px;
+  }
+
+  .admin-home-topbar {
+    flex-direction: column;
+  }
+
+  .admin-home-panel {
+    padding: 24px;
+    border-radius: 26px;
   }
 
   .detail-card {
@@ -2130,16 +2327,69 @@ body.portal-page-switching .student-shell {
     font-size: 18px;
   }
 
+  .study-summary-card {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .study-summary-content {
+    gap: 12px;
+  }
+
+  .study-summary-text h3 {
+    margin: 12px 0 14px;
+    font-size: 28px;
+  }
+
+  .study-summary-meta {
+    gap: 8px;
+  }
+
+  .study-meta-item {
+    padding-bottom: 8px;
+  }
+
+  .study-meta-item strong {
+    font-size: 18px;
+  }
+
+  .study-profile-grid {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .study-profile-item {
+    padding: 10px 12px;
+    border-radius: 14px;
+    gap: 5px;
+  }
+
+  .study-profile-item strong {
+    font-size: 16px;
+  }
+
+  .study-summary-score {
+    min-height: 156px;
+    border-radius: 20px;
+    gap: 6px;
+  }
+
+  .study-summary-score span {
+    font-size: 14px;
+  }
+
   .study-summary-score strong {
-    font-size: 56px;
+    font-size: 48px;
   }
 
   .ranking-item {
-    grid-template-columns: 46px 1fr;
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    gap: 8px;
   }
 
   .ranking-score {
-    grid-column: 2;
+    grid-column: 3;
+    font-size: 15px;
   }
 
   .portal-modal-panel {

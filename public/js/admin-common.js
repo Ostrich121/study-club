@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const content = document.querySelector("[data-admin-content]");
   const page = document.body.dataset.page || "";
   const shortOrgName = "福建省大学生研习社（福建农林大学）";
+  const isDashboard = page === "dashboard";
 
   if (page === "candidates") {
     window.location.replace("/admin/dashboard.html");
@@ -11,58 +12,76 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const title = document.body.dataset.title || "管理后台";
   const subtitle = document.body.dataset.subtitle || `${shortOrgName}积分管理后台`;
-  const pageHeroSummaries = {
-    members: "围绕成员基础名单、姓名匹配和学号信息，完成成员库的规范化维护与导入。",
-    "score-actions": "统一汇总 Excel 加分、粘贴名单加分与手动加减分入口，按需要进入对应积分处理界面。",
-    "excel-score": "通过签到表导入积分，先预览后确认，确保每次加分过程清楚、结果可追溯。",
-    "paste-score": "面向临时活动与补录场景，支持快速粘贴名单并完成积分预览与确认。",
-    "manual-score": "适合补分、扣分、纠错等特殊情况，所有变动都会留下完整操作记录。",
-    logs: "集中查看每一次积分变动来源，便于复核、追踪、公示与后续核验。",
-  };
 
   const scorePages = new Set(["score-actions", "excel-score", "paste-score", "manual-score"]);
 
   const navItems = [
-    { key: "dashboard", label: "统计概览", href: "/admin/dashboard.html" },
+    { key: "overview", label: "统计概览", href: "/admin/overview.html" },
     { key: "members", label: "成员管理", href: "/admin/members.html" },
     { key: "score-actions", label: "成员加分", href: "/admin/score-actions.html" },
     { key: "logs", label: "积分日志", href: "/admin/logs.html" },
   ];
 
-  shell.innerHTML = `
-    <aside class="sidebar">
-      <div class="brand">
-        <img class="brand-logo brand-logo-sidebar" src="/assets/study-club-logo.png" alt="研习社 Logo" />
-        <div>
-          <h2>${shortOrgName}</h2>
-          <p>积分纪实、名单维护与活动管理</p>
+  if (isDashboard) {
+    shell.innerHTML = `
+      <div class="admin-home-shell">
+        <div class="admin-home-topbar">
+          <div class="brand">
+            <img class="brand-logo brand-logo-sidebar" src="/assets/study-club-logo.png" alt="研习社 Logo" />
+            <div>
+            <h2 class="sidebar-brand-title">
+              <span>福建省大学生研习社</span>
+              <span>（福建农林大学）</span>
+            </h2>
+          </div>
+        </div>
+        <div class="inline-actions">
+            <span class="tag" id="admin-name">登录检查中...</span>
+            <a class="btn-secondary" href="/index.html">返回首页</a>
+            <button class="btn-secondary" id="logout-btn">退出登录</button>
+          </div>
+        </div>
+        <div class="admin-home-main">
+          <div id="admin-content-slot"></div>
         </div>
       </div>
-      <div class="sidebar-intro">
-        <div class="tag">${shortOrgName}</div>
-        <p>统一承载成员管理、活动录入、积分公示与报名维护的专题化后台。</p>
-      </div>
-      <nav class="sidebar-nav">
-        ${navItems.map((item) => `
-          <a class="sidebar-link ${(item.key === "score-actions" ? scorePages.has(page) : item.key === page) ? "active" : ""}" href="${item.href}">${item.label}</a>
-        `).join("")}
-      </nav>
-    </aside>
-    <div class="admin-main">
+    `;
+  } else {
+    shell.innerHTML = `
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-logo brand-logo-sidebar" src="/assets/study-club-logo.png" alt="研习社 Logo" />
+          <div>
+            <h2 class="sidebar-brand-title">
+              <span>福建省大学生研习社</span>
+              <span>（福建农林大学）</span>
+            </h2>
+          </div>
+        </div>
+        <div class="sidebar-intro">
+          <div class="tag">${shortOrgName}</div>
+        </div>
+        <nav class="sidebar-nav">
+          ${navItems.map((item) => `
+            <a class="sidebar-link ${(item.key === "score-actions" ? scorePages.has(page) : item.key === page) ? "active" : ""}" href="${item.href}">${item.label}</a>
+          `).join("")}
+        </nav>
+      </aside>
+      <div class="admin-main">
       <div class="admin-topbar">
         <div>
           <h1>${title}</h1>
-          <p>${subtitle}</p>
         </div>
         <div class="inline-actions">
           <span class="tag" id="admin-name">登录检查中...</span>
-          <a class="btn-secondary" href="/index.html">返回首页</a>
-          <button class="btn-secondary" id="logout-btn">退出登录</button>
+            <a class="btn-secondary" href="/index.html">返回首页</a>
+            <button class="btn-secondary" id="logout-btn">退出登录</button>
+          </div>
         </div>
+        <div id="admin-content-slot"></div>
       </div>
-      <div id="admin-content-slot"></div>
-    </div>
-  `;
+    `;
+  }
 
   // 某些浏览器缓存或层叠情况下，默认 a 标签跳转可能表现不稳定，这里统一兜底。
   shell.addEventListener("click", (event) => {
@@ -83,19 +102,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const contentSlot = document.getElementById("admin-content-slot");
   contentSlot.appendChild(content);
 
-  if (page !== "dashboard") {
+  if (!isDashboard) {
     const pageHero = document.createElement("section");
     pageHero.className = "hero-card admin-page-hero";
     pageHero.innerHTML = `
       <div class="admin-page-hero-copy">
         <div class="tag">${shortOrgName}专题后台</div>
         <h2>${title}</h2>
-        <p>${pageHeroSummaries[page] || subtitle}</p>
       </div>
       <div class="admin-page-hero-side">
         <img class="brand-logo brand-logo-banner" src="/assets/study-club-logo.png" alt="研习社 Logo" />
         <strong>${shortOrgName}</strong>
-        <span>${subtitle}</span>
       </div>
     `;
     contentSlot.prepend(pageHero);

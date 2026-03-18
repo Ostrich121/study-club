@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>统计概览</title>
+  <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body data-page="overview" data-title="统计概览" data-subtitle="积分统计概览、系统设置与近期操作">
+  <div id="admin-shell"></div>
+  <div data-admin-content hidden>
+    <section class="grid-3">
+      <div class="stat-card">
+        <div class="stat-label">成员总数</div>
+        <div class="stat-value" id="member-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">累计积分</div>
+        <div class="stat-value" id="total-score">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">积分日志数</div>
+        <div class="stat-value" id="log-count">0</div>
+      </div>
+    </section>
+
+    <section class="page-section grid-2">
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>系统设置</h2>
+            <p>保留积分规则扩展能力</p>
+          </div>
+        </div>
+        <form id="settings-form">
+          <div class="form-grid">
+            <div class="field">
+              <label for="points-per-match">每次识别加分值</label>
+              <input id="points-per-match" type="number" min="1" value="1" />
+            </div>
+            <div class="field">
+              <label for="deduplicate-within-import">同表重复成员处理</label>
+              <select id="deduplicate-within-import">
+                <option value="true">同一成员默认只加 1 次</option>
+                <option value="false">同一成员按出现次数累计</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="btn" id="save-settings-btn" type="submit">保存系统设置</button>
+          </div>
+          <p class="hint">当前设置将影响 Excel 与粘贴名单加分预览结果。</p>
+        </form>
+
+        <div class="page-section settings-subsection">
+          <div class="section-header">
+            <div>
+              <h3>管理员密码修改</h3>
+              <p>修改成功后，管理员下次登录请使用新密码。</p>
+            </div>
+          </div>
+          <form id="change-password-form">
+            <div class="form-grid">
+              <div class="field">
+                <label for="current-password">当前密码</label>
+                <input id="current-password" type="password" placeholder="请输入当前管理员密码" />
+              </div>
+              <div class="field">
+                <label for="next-password">新密码</label>
+                <input id="next-password" type="password" placeholder="请输入新的管理员密码" />
+              </div>
+              <div class="field">
+                <label for="confirm-password">确认新密码</label>
+                <input id="confirm-password" type="password" placeholder="请再次输入新密码" />
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn" id="change-password-btn" type="submit">保存新密码</button>
+            </div>
+            <p class="hint">建议使用更安全、便于内部保管的新密码，长度不少于 6 位。</p>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <div>
+            <h2>排行榜前五</h2>
+            <p>同分按姓名拼音排序</p>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>排名</th>
+                <th>姓名</th>
+                <th>学号</th>
+                <th>积分</th>
+              </tr>
+            </thead>
+            <tbody id="top-members"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section card">
+      <div class="section-header">
+        <div>
+          <h2>最近积分日志</h2>
+          <p>便于快速回看最新操作</p>
+        </div>
+      </div>
+      <div class="timeline" id="recent-log-list"></div>
+    </section>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/admin-common.js"></script>
+  <script src="/js/dashboard.js"></script>
+</body>
+</html>

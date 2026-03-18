@@ -52,15 +52,15 @@
 - 首页先选择身份：
   学员输入姓名进入查询模块
   管理员输入管理密码进入后台
-- `/login.html`：管理员登录页
-- `/pages/signup.html`：报名表页
+- `/login.html`：管理员登录
+- `/pages/signup.html`：报名表
 - `/admin/dashboard.html`：管理后台首页
-- `/admin/members.html`：成员管理页
-- `/admin/excel-score.html`：Excel 上传加分页
-- `/admin/paste-score.html`：粘贴名单加分页
-- `/admin/manual-score.html`：手动加减分页
-- `/admin/logs.html`：积分日志页
-- `/admin/candidates.html`：候选名单管理页
+- `/admin/members.html`：成员管理
+- `/admin/excel-score.html`：Excel 上传加分
+- `/admin/paste-score.html`：粘贴名单加分
+- `/admin/manual-score.html`：手动加减分
+- `/admin/logs.html`：积分日志
+- `/admin/candidates.html`：候选名单管理
 
 ## 默认管理员账号
 

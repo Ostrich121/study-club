@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let refreshTimer = null;
   let latestUpdatedAt = "";
   const isStaticPreview = window.location.protocol === "file:";
+  const homeUrl = isStaticPreview ? "../index.html" : "/index.html";
 
   const queryForm = document.getElementById("student-query-form");
   const queryInput = document.getElementById("student-query-input");
@@ -80,7 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("current-student-study-stage").textContent = "无";
     document.getElementById("leaderboard-count").textContent = "0";
     document.getElementById("leaderboard-total-score").textContent = "0";
-    document.getElementById("leaderboard-top-name").textContent = "--";
     document.getElementById("leaderboard-updated-at").textContent = "--";
     document.getElementById("full-ranking-updated-at").textContent = "--";
     document.getElementById("top-ranking-list").innerHTML = `<div class="empty-state">登录后可查看实时积分榜前 10 名</div>`;
@@ -132,13 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("current-student-grade").textContent = App.formatDisplayValue(currentStudent.grade);
     document.getElementById("current-student-major").textContent = App.formatDisplayValue(currentStudent.major);
     document.getElementById("current-student-study-stage").textContent = App.formatDisplayValue(currentStudent.studyStage);
-    document.getElementById("student-workspace-subtitle").textContent = `${currentStudent.name} 同学，以下是你当前的积分报表与实时积分榜。个人信息如需修改，请联系管理员。`;
+    document.getElementById("student-workspace-subtitle").textContent = `${currentStudent.name} 同学，以下是你当前的积分表与实时积分榜。个人信息如需修改，请联系管理员。`;
   }
 
   function renderBoardSummary(summary) {
     document.getElementById("leaderboard-count").textContent = summary.totalMembers || 0;
     document.getElementById("leaderboard-total-score").textContent = summary.totalScore || 0;
-    document.getElementById("leaderboard-top-name").textContent = summary.topName || "--";
     document.getElementById("leaderboard-updated-at").textContent = App.formatDate(latestUpdatedAt);
     document.getElementById("full-ranking-updated-at").textContent = App.formatDate(latestUpdatedAt);
   }
@@ -206,7 +205,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function handleStudentLogout(options = {}) {
-    const { silent = false, callApi = true } = options;
+    const {
+      silent = false,
+      callApi = true,
+      redirectToHome = false,
+    } = options;
 
     try {
       if (callApi && !isStaticPreview) {
@@ -223,6 +226,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!silent) {
       App.showToast("已退出学员登录");
+    }
+
+    if (redirectToHome) {
+      window.setTimeout(() => {
+        window.location.href = homeUrl;
+      }, silent ? 0 : 220);
     }
   }
 
@@ -342,7 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   logoutButton.addEventListener("click", async () => {
-    await handleStudentLogout();
+    await handleStudentLogout({ redirectToHome: true });
   });
 
   document.getElementById("open-full-ranking-btn").addEventListener("click", openFullRanking);
