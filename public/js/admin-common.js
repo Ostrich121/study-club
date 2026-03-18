@@ -36,14 +36,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     shell.innerHTML = `
       <div class="admin-detail-shell">
         <div class="admin-detail-topbar">
-          <div class="inline-actions admin-detail-left">
-            <a class="btn-secondary" href="/admin/dashboard.html">返回上一级</a>
-          </div>
           <div>
             <h1>${title}</h1>
             <p>${subtitle}</p>
           </div>
-          <div class="inline-actions">
+          <div class="inline-actions admin-detail-actions">
+            <a class="btn-secondary" href="/admin/dashboard.html">返回上一级</a>
             <span class="tag" id="admin-name">登录检查中...</span>
             <button class="btn-secondary" id="logout-btn">退出登录</button>
           </div>

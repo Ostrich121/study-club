@@ -3,163 +3,40 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>福建省大学生研习社（福建农林大学）学员积分表</title>
+  <title>学员登录 - 福建省大学生研习社（福建农林大学）</title>
   <link rel="stylesheet" href="./css/app.css" />
 </head>
-<body class="portal-page">
-  <div class="page-shell portal-page-shell">
-    <section class="student-shell portal-active student-page-shell">
-      <div class="study-report-shell">
-        <div class="study-report-topbar student-actions-topbar" id="student-topbar" hidden>
-          <div class="student-topbar-copy">
-            <p id="student-workspace-subtitle">同学，以下是您当前的积分表以及实时积分榜。</p>
-          </div>
-          <div class="inline-actions">
-            <button class="btn-secondary" id="student-logout-btn" type="button" hidden>退出登录</button>
-          </div>
-        </div>
-
-        <section class="card student-query-card" id="student-login-card">
-          <img class="student-login-logo" src="./assets/study-club-logo.png" alt="研习社 Logo" />
-          <h2 class="student-login-title">
-            <span>福建省大学生研习社（福建农林大学）</span>
-            <span class="student-login-title-sub">学员积分表</span>
-          </h2>
-          <form id="student-query-form">
-            <div class="student-query-grid">
-              <div class="field">
-                <label for="student-query-input">姓名</label>
-                <input id="student-query-input" placeholder="请输入姓名" />
-              </div>
-              <div class="field student-password-field" id="student-password-field" hidden>
-                <label for="student-password-input">登录密码</label>
-                <input id="student-password-input" placeholder="请输入当前学号" type="password" />
-              </div>
-              <div class="field student-query-button-wrap">
-                <label>&nbsp;</label>
-                <button class="btn" id="student-query-submit" type="submit">进入积分表</button>
-              </div>
-            </div>
-            <p class="hint student-login-tip" id="student-login-tip" hidden></p>
-          </form>
-        </section>
-
-        <section class="study-summary-card page-section" id="student-summary-card" hidden>
-          <div class="study-summary-content">
-            <div class="study-summary-text">
-              <div class="tag tag-light">成长总积分</div>
-              <h3>您目前的总积分</h3>
-              <div class="study-summary-meta">
-                <div class="study-meta-item">
-                  <span>当前姓名</span>
-                  <strong id="current-student-name">--</strong>
-                </div>
-                <div class="study-meta-item">
-                  <span>总排名</span>
-                  <strong id="current-student-rank">--</strong>
-                </div>
-                <div class="study-meta-item">
-                  <span>最近更新</span>
-                  <strong id="summary-updated-at">--</strong>
-                </div>
-              </div>
-              <div class="study-profile-grid">
-                <div class="study-profile-item">
-                  <span>所属部门</span>
-                  <strong id="current-student-department">无</strong>
-                </div>
-                <div class="study-profile-item">
-                  <span>政治面貌</span>
-                  <strong id="current-student-political-status">无</strong>
-                </div>
-                <div class="study-profile-item">
-                  <span>学院</span>
-                  <strong id="current-student-college">无</strong>
-                </div>
-                <div class="study-profile-item">
-                  <span>年级</span>
-                  <strong id="current-student-grade">无</strong>
-                </div>
-                <div class="study-profile-item">
-                  <span>专业</span>
-                  <strong id="current-student-major">无</strong>
-                </div>
-                <div class="study-profile-item">
-                  <span>学段</span>
-                  <strong id="current-student-study-stage">无</strong>
-                </div>
-              </div>
-            </div>
-            <div class="study-summary-score">
-              <span>研习社总积分</span>
-              <strong id="current-student-score">0</strong>
-            </div>
-          </div>
-        </section>
-
-        <section class="study-board-card page-section" id="student-board-card" hidden>
-          <div class="study-board-header">
-            <div>
-              <h3>实时积分榜</h3>
-              <p>默认显示前 10 名，点击成员即可查看他的加分明细</p>
-            </div>
-            <div class="study-board-actions">
-              <span class="board-update">更新时间：<span id="leaderboard-updated-at">--</span></span>
-              <button class="btn-secondary" id="open-full-ranking-btn" type="button">查看完整排名</button>
-            </div>
-          </div>
-
-          <div class="module-stat-grid page-section">
-            <div class="stat-card">
-              <div class="stat-label">参与排名人数</div>
-              <div class="stat-value" id="leaderboard-count">0</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-label">总积分</div>
-              <div class="stat-value" id="leaderboard-total-score">0</div>
-            </div>
-          </div>
-
-          <div class="ranking-list page-section" id="top-ranking-list">
-            <div class="empty-state">请输入姓名或学号后查看排行榜数据</div>
-          </div>
-        </section>
-
-        <section class="study-detail-card page-section" id="detail-card" hidden>
-          <div class="study-board-header">
-            <div>
-              <h3 id="detail-member-name">点击某个排名成员查看明细</h3>
-              <p id="detail-member-meta">这里会显示该成员当前积分、学号和每次积分变动。</p>
-            </div>
-          </div>
-          <div class="timeline page-section" id="member-detail-list">
-            <div class="empty-state">点击排行榜成员后，即可查看他的加分明细。</div>
-          </div>
-        </section>
-      </div>
+<body>
+  <div class="auth-card student-auth-card">
+    <section class="auth-cover auth-cover-minimal hero-card">
+      <img class="auth-cover-logo" src="./assets/study-club-logo.png" alt="研习社 Logo" />
+      <h1 class="auth-cover-title">
+        <span>福建省大学生研习社</span>
+        <span class="auth-cover-title-sub">（福建农林大学）</span>
+        <span class="student-auth-title-sub">学员积分表</span>
+      </h1>
     </section>
 
-    <div class="ranking-modal" id="ranking-modal" hidden>
-      <div class="ranking-modal-backdrop" id="ranking-modal-backdrop"></div>
-      <div class="ranking-modal-panel">
-        <div class="study-board-header">
-          <div>
-            <h3>完整积分排名</h3>
-            <p>点击任意成员可直接查看他的加分明细</p>
-          </div>
-          <div class="study-board-actions">
-            <span class="board-update">更新时间：<span id="full-ranking-updated-at">--</span></span>
-            <button class="btn-secondary" id="close-full-ranking-btn" type="button">关闭</button>
-          </div>
-        </div>
-        <div class="ranking-list ranking-list-full page-section" id="full-ranking-list">
-          <div class="empty-state">暂无完整排名数据</div>
+    <section class="auth-panel hero-card">
+      <div class="section-header">
+        <div>
+          <h2>学员登录</h2>
         </div>
       </div>
-    </div>
-  </div>
 
+      <form id="student-query-form" autocomplete="off">
+        <div class="field">
+          <label for="student-query-input">姓名</label>
+          <input id="student-query-input" placeholder="请输入姓名" />
+        </div>
+        <div class="form-actions">
+          <button class="btn" id="student-query-submit" type="submit">进入积分表</button>
+          <a class="btn-secondary" href="../index.html">返回身份入口</a>
+        </div>
+      </form>
+    </section>
+  </div>
   <script src="./js/common.js"></script>
-  <script src="./js/student.js"></script>
+  <script src="./js/student-login.js"></script>
 </body>
 </html>

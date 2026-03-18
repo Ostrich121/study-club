@@ -6,18 +6,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let latestUpdatedAt = "";
   const isStaticPreview = window.location.protocol === "file:";
   const homeUrl = isStaticPreview ? "../index.html" : "/index.html";
+  const loginUrl = isStaticPreview ? "./student.html" : "/student.html";
 
-  const queryForm = document.getElementById("student-query-form");
-  const queryInput = document.getElementById("student-query-input");
-  const passwordField = document.getElementById("student-password-field");
-  const passwordInput = document.getElementById("student-password-input");
-  const querySubmit = document.getElementById("student-query-submit");
-  const loginTip = document.getElementById("student-login-tip");
   const logoutButton = document.getElementById("student-logout-btn");
-  const topbar = document.getElementById("student-topbar");
-  const loginCard = document.getElementById("student-login-card");
-  const summaryCard = document.getElementById("student-summary-card");
-  const boardCard = document.getElementById("student-board-card");
   const detailCard = document.getElementById("detail-card");
   const rankingModal = document.getElementById("ranking-modal");
 
@@ -28,50 +19,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function setAuthenticatedLayout(authenticated) {
-    topbar.hidden = !authenticated;
-    loginCard.hidden = authenticated;
-    summaryCard.hidden = !authenticated;
-    boardCard.hidden = !authenticated;
-    detailCard.hidden = !authenticated;
-    logoutButton.hidden = !authenticated;
-
-    if (!authenticated) {
-      rankingModal.hidden = true;
-    }
-  }
-
-  function togglePasswordField(visible, studentName = "") {
-    passwordField.hidden = !visible;
-    if (visible) {
-      loginTip.hidden = false;
-      loginTip.textContent = `${studentName || "该学员"}已启用学号密码，请输入当前学号。`;
-      querySubmit.textContent = "验证并进入";
-      passwordInput.focus();
-      return;
-    }
-
-    passwordInput.value = "";
-    loginTip.hidden = true;
-    loginTip.textContent = "";
-    querySubmit.textContent = "进入积分表";
-  }
-
-  function resetWorkspace(options = {}) {
-    const { preserveLoginName = false } = options;
+  function resetWorkspace() {
     allMembers = [];
     selectedMemberId = null;
     currentStudent = null;
     latestUpdatedAt = "";
-
     clearRefreshTimer();
-    setAuthenticatedLayout(false);
-    togglePasswordField(false);
-
-    if (!preserveLoginName) {
-      queryInput.value = "";
-    }
-
     document.getElementById("student-workspace-subtitle").textContent = "同学，以下是您当前的积分表以及实时积分榜。";
     document.getElementById("current-student-name").textContent = "--";
     document.getElementById("current-student-rank").textContent = "--";
@@ -87,32 +40,25 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("leaderboard-total-score").textContent = "0";
     document.getElementById("leaderboard-updated-at").textContent = "--";
     document.getElementById("full-ranking-updated-at").textContent = "--";
-    document.getElementById("top-ranking-list").innerHTML = `<div class="empty-state">登录后可查看实时积分榜前 10 名</div>`;
-    document.getElementById("full-ranking-list").innerHTML = `<div class="empty-state">登录后可查看完整排名数据</div>`;
-    document.getElementById("member-detail-list").innerHTML = `<div class="empty-state">登录后可点击排行榜成员查看他的加分明细。</div>`;
+    document.getElementById("top-ranking-list").innerHTML = `<div class="empty-state">暂无排行榜数据</div>`;
+    document.getElementById("full-ranking-list").innerHTML = `<div class="empty-state">暂无完整排名数据</div>`;
+    document.getElementById("member-detail-list").innerHTML = `<div class="empty-state">点击排行榜成员后，即可查看他的加分明细。</div>`;
     document.getElementById("detail-member-name").textContent = "点击某个排名成员查看明细";
     document.getElementById("detail-member-meta").textContent = "这里会显示该成员当前积分、学号和每次积分变动。";
+  }
+
+  async function fetchStudentDashboard() {
+    return App.request("/api/public/student-dashboard");
   }
 
   async function fetchStudentMe() {
     return App.request("/api/auth/student-me");
   }
 
-  async function loginStudent(payload) {
-    return App.request("/api/auth/student-login", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  }
-
   async function logoutStudent() {
     return App.request("/api/auth/student-logout", {
       method: "POST",
     });
-  }
-
-  async function fetchStudentDashboard() {
-    return App.request("/api/public/student-dashboard");
   }
 
   function hydrateStudentDashboard(data) {
@@ -208,39 +154,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function handleStudentLogout(options = {}) {
-    const {
-      silent = false,
-      callApi = true,
-      redirectToHome = false,
-    } = options;
+  function closeFullRanking() {
+    rankingModal.hidden = true;
+  }
 
+  function openFullRanking() {
+    rankingModal.hidden = false;
+  }
+
+  async function handleStudentLogout() {
     try {
-      if (callApi && !isStaticPreview) {
+      if (!isStaticPreview) {
         await logoutStudent();
       }
     } catch (error) {
-      if (!silent) {
-        App.showToast(error.message, "error");
-      }
+      App.showToast(error.message, "error");
     }
 
     resetWorkspace();
-    queryInput.focus();
-
-    if (!silent) {
-      App.showToast("已退出学员登录");
-    }
-
-    if (redirectToHome) {
-      window.setTimeout(() => {
-        window.location.href = homeUrl;
-      }, silent ? 0 : 220);
-    }
+    App.showToast("已退出学员登录");
+    window.setTimeout(() => {
+      window.location.href = homeUrl;
+    }, 220);
   }
 
-  async function enterStudentMode(options = {}) {
-    const { showWelcome = false } = options;
+  async function loadDashboard() {
+    const me = await fetchStudentMe();
+    if (!me.authenticated) {
+      window.location.href = loginUrl;
+      return;
+    }
+
     const data = await fetchStudentDashboard();
     hydrateStudentDashboard(data);
 
@@ -249,28 +193,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     selectedMemberId = currentStudent.id;
-    setAuthenticatedLayout(true);
     renderSummary();
     renderBoardSummary(data.summary || {});
     renderRankings();
     renderMemberDetail(currentStudent, data.logs || []);
-    queryInput.value = currentStudent.name;
-    togglePasswordField(false);
 
     clearRefreshTimer();
-    refreshTimer = window.setInterval(refreshStudentDashboard, 20000);
-
-    if (showWelcome) {
-      App.showToast(`欢迎你，${currentStudent.name}`);
-      summaryCard.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    refreshTimer = window.setInterval(refreshDashboard, 20000);
   }
 
-  async function refreshStudentDashboard() {
-    if (!currentStudent) {
-      return;
-    }
-
+  async function refreshDashboard() {
     try {
       const data = await fetchStudentDashboard();
       hydrateStudentDashboard(data);
@@ -296,67 +228,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       await loadMemberLogs(selectedMemberId);
     } catch (error) {
-      if (error.message.includes("请先登录学员账号") || error.message.includes("重新登录")) {
-        await handleStudentLogout({ silent: true, callApi: false });
-        App.showToast("登录状态已失效，请重新输入姓名登录", "error");
-        return;
-      }
       App.showToast(error.message, "error");
+      window.setTimeout(() => {
+        window.location.href = loginUrl;
+      }, 240);
     }
   }
 
-  function closeFullRanking() {
-    rankingModal.hidden = true;
-  }
-
-  function openFullRanking() {
-    rankingModal.hidden = false;
-  }
-
-  queryForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-
-    const name = queryInput.value.trim();
-    const password = passwordInput.value.trim();
-
-    if (!name) {
-      App.showToast("请输入姓名", "error");
-      queryInput.focus();
-      return;
-    }
-
-    if (isStaticPreview) {
-      App.showToast("当前是本地文件预览。请通过本地服务访问 student.html 后再登录真实数据。", "error");
-      return;
-    }
-
-    try {
-      App.setButtonBusy(querySubmit, true, "登录中...");
-      const result = await loginStudent({ name, password });
-
-      if (result.requiresPassword) {
-        queryInput.value = result.student ? result.student.name : name;
-        togglePasswordField(true, result.student ? result.student.name : name);
-        App.showToast(result.message);
-        return;
-      }
-
-      await enterStudentMode({ showWelcome: true });
-    } catch (error) {
-      App.showToast(error.message, "error");
-      if (!passwordField.hidden) {
-        passwordInput.focus();
-      } else {
-        queryInput.focus();
-      }
-    } finally {
-      App.setButtonBusy(querySubmit, false);
-    }
-  });
-
-  logoutButton.addEventListener("click", async () => {
-    await handleStudentLogout({ redirectToHome: true });
-  });
+  logoutButton.addEventListener("click", handleStudentLogout);
 
   document.getElementById("open-full-ranking-btn").addEventListener("click", openFullRanking);
   document.getElementById("close-full-ranking-btn").addEventListener("click", closeFullRanking);
@@ -385,24 +264,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   resetWorkspace();
-
-  const initialName = new URLSearchParams(window.location.search).get("name");
-  if (initialName) {
-    queryInput.value = initialName;
-  }
-
   if (!isStaticPreview) {
-    fetchStudentMe()
-      .then((result) => {
-        if (!result.authenticated) {
-          return;
-        }
-        queryInput.value = result.student.name;
-        return enterStudentMode();
-      })
-      .catch((error) => {
-        App.showToast(error.message, "error");
-        resetWorkspace({ preserveLoginName: Boolean(initialName) });
-      });
+    loadDashboard().catch((error) => {
+      App.showToast(error.message, "error");
+      window.setTimeout(() => {
+        window.location.href = loginUrl;
+      }, 240);
+    });
   }
 });
