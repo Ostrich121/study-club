@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const shell = document.getElementById("admin-shell");
   const content = document.querySelector("[data-admin-content]");
   const page = document.body.dataset.page || "";
+  const shortOrgName = "福建省大学生研习社（福建农林大学）";
 
   if (page === "candidates") {
     window.location.replace("/admin/dashboard.html");
@@ -9,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   const title = document.body.dataset.title || "管理后台";
-  const subtitle = document.body.dataset.subtitle || "福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）积分管理后台";
+  const subtitle = document.body.dataset.subtitle || `${shortOrgName}积分管理后台`;
   const pageHeroSummaries = {
     members: "围绕成员基础名单、姓名匹配和学号信息，完成成员库的规范化维护与导入。",
     "score-actions": "统一汇总 Excel 加分、粘贴名单加分与手动加减分入口，按需要进入对应积分处理界面。",
@@ -33,19 +34,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div class="brand">
         <img class="brand-logo brand-logo-sidebar" src="/assets/study-club-logo.png" alt="研习社 Logo" />
         <div>
-          <h2>福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）</h2>
+          <h2>${shortOrgName}</h2>
           <p>积分纪实、名单维护与活动管理</p>
         </div>
       </div>
       <div class="sidebar-intro">
-        <div class="tag">福建省大学生研习社（福建农林大学）</div>
+        <div class="tag">${shortOrgName}</div>
         <p>统一承载成员管理、活动录入、积分公示与报名维护的专题化后台。</p>
       </div>
       <nav class="sidebar-nav">
         ${navItems.map((item) => `
           <a class="sidebar-link ${(item.key === "score-actions" ? scorePages.has(page) : item.key === page) ? "active" : ""}" href="${item.href}">${item.label}</a>
         `).join("")}
-        <a class="sidebar-link" href="/index.html">返回首页</a>
       </nav>
     </aside>
     <div class="admin-main">
@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
         <div class="inline-actions">
           <span class="tag" id="admin-name">登录检查中...</span>
+          <a class="btn-secondary" href="/index.html">返回首页</a>
           <button class="btn-secondary" id="logout-btn">退出登录</button>
         </div>
       </div>
@@ -87,13 +88,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     pageHero.className = "hero-card admin-page-hero";
     pageHero.innerHTML = `
       <div class="admin-page-hero-copy">
-        <div class="tag">福建省大学生研习社（福建农林大学）专题后台</div>
+        <div class="tag">${shortOrgName}专题后台</div>
         <h2>${title}</h2>
         <p>${pageHeroSummaries[page] || subtitle}</p>
       </div>
       <div class="admin-page-hero-side">
         <img class="brand-logo brand-logo-banner" src="/assets/study-club-logo.png" alt="研习社 Logo" />
-        <strong>福建省习近平新时代中国特色社会主义思想大学生研习社（福建农林大学）</strong>
+        <strong>${shortOrgName}</strong>
         <span>${subtitle}</span>
       </div>
     `;
