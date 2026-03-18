@@ -767,10 +767,54 @@ tbody tr:hover {
 
 .admin-home-card .module-card-head {
   align-items: center;
+  justify-content: center;
 }
 
 .admin-home-card h3 {
   margin-top: 0;
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.admin-detail-shell {
+  min-height: 100vh;
+  padding: 28px;
+}
+
+.admin-detail-topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 22px;
+  padding: 20px 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 249, 237, 0.94), rgba(255, 242, 214, 0.9));
+  border: 1px solid rgba(248, 223, 154, 0.16);
+  box-shadow: 0 18px 36px rgba(72, 7, 14, 0.1);
+}
+
+.admin-detail-topbar h1 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.admin-detail-topbar p {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+}
+
+.admin-detail-left {
+  justify-self: start;
+}
+
+.admin-detail-content {
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar {
@@ -1831,6 +1875,25 @@ tbody tr:hover {
   box-shadow: 0 28px 48px rgba(92, 8, 18, 0.22);
 }
 
+.student-actions-topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.student-topbar-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.student-topbar-copy p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.7;
+}
+
 body.portal-page-switching .portal-entry-shell,
 body.portal-page-switching .student-shell {
   pointer-events: none;
@@ -1851,11 +1914,6 @@ body.portal-page-switching .student-shell {
   gap: 16px;
   color: #fff;
   margin-bottom: 18px;
-}
-
-.study-report-topbar > div:first-child {
-  min-width: 0;
-  flex: 1;
 }
 
 .study-report-topbar h2 {
@@ -1884,6 +1942,46 @@ body.portal-page-switching .student-shell {
 
 .student-query-card {
   background: rgba(255, 249, 237, 0.96);
+  display: grid;
+  justify-items: center;
+  gap: 20px;
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.student-login-logo {
+  width: min(220px, 48vw);
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 28px rgba(72, 7, 14, 0.2));
+}
+
+.student-login-title {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+}
+
+.student-login-title span:first-child {
+  font-size: clamp(28px, 3vw, 34px);
+  line-height: 1.2;
+  color: #7d1318;
+}
+
+.student-login-title-sub {
+  font-size: clamp(18px, 2.2vw, 22px);
+  line-height: 1.2;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.student-query-card form {
+  width: min(720px, 100%);
+  text-align: left;
 }
 
 .student-query-grid {
@@ -1902,7 +2000,7 @@ body.portal-page-switching .student-shell {
 }
 
 .student-login-tip {
-  margin-top: 14px;
+  margin-top: 12px;
 }
 
 .student-profile-editor-card,
@@ -2204,8 +2302,7 @@ body.portal-page-switching .student-shell {
   .admin-page-hero,
   .identity-hero,
   .module-grid,
-  .module-stat-grid,
-  .admin-home-grid {
+  .module-stat-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2238,13 +2335,39 @@ body.portal-page-switching .student-shell {
     padding: 18px;
   }
 
+  .admin-detail-shell {
+    padding: 18px;
+  }
+
   .admin-home-topbar {
     flex-direction: column;
+  }
+
+  .admin-detail-topbar {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+  }
+
+  .admin-detail-topbar h1,
+  .admin-detail-topbar p {
+    text-align: left;
   }
 
   .admin-home-panel {
     padding: 24px;
     border-radius: 26px;
+  }
+
+  .admin-home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .admin-home-card {
+    padding: 18px 14px;
+    border-radius: 18px;
+    min-height: 112px;
+    align-content: center;
   }
 
   .detail-card {
@@ -2292,6 +2415,19 @@ body.portal-page-switching .student-shell {
   .study-report-topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-home-grid {
+    gap: 12px;
+  }
+
+  .admin-home-card {
+    min-height: 96px;
+    padding: 16px 12px;
+  }
+
+  .admin-home-card h3 {
+    font-size: 22px;
   }
 
   .portal-entry-card h1 {

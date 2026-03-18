@@ -10,10 +10,9 @@
   <div class="page-shell portal-page-shell">
     <section class="student-shell portal-active student-page-shell">
       <div class="study-report-shell">
-        <div class="study-report-topbar">
-          <div>
-            <h2>福建省大学生研习社（福建农林大学）学员积分表</h2>
-            <p id="student-workspace-subtitle">请先输入姓名登录。若系统检测到该学员已启用学号密码，会继续要求输入学号作为登录密码。</p>
+        <div class="study-report-topbar student-actions-topbar" id="student-topbar" hidden>
+          <div class="student-topbar-copy">
+            <p id="student-workspace-subtitle">同学，以下是您当前的积分表以及实时积分榜。</p>
           </div>
           <div class="inline-actions">
             <button class="btn-secondary" id="student-logout-btn" type="button" hidden>退出登录</button>
@@ -21,12 +20,11 @@
         </div>
 
         <section class="card student-query-card" id="student-login-card">
-          <div class="section-header">
-            <div>
-              <h3>学员登录</h3>
-              <p>默认可直接通过姓名登录；若系统已启用学号密码，将要求继续输入学号完成登录。</p>
-            </div>
-          </div>
+          <img class="student-login-logo" src="./assets/study-club-logo.png" alt="研习社 Logo" />
+          <h2 class="student-login-title">
+            <span>福建省大学生研习社（福建农林大学）</span>
+            <span class="student-login-title-sub">学员积分表</span>
+          </h2>
           <form id="student-query-form">
             <div class="student-query-grid">
               <div class="field">
@@ -39,10 +37,10 @@
               </div>
               <div class="field student-query-button-wrap">
                 <label>&nbsp;</label>
-                <button class="btn" id="student-query-submit" type="submit">登录并进入学员页面</button>
+                <button class="btn" id="student-query-submit" type="submit">进入积分表</button>
               </div>
             </div>
-            <p class="hint student-login-tip" id="student-login-tip">若当前学员未启用学号密码，系统会直接以姓名登录并进入学员页面。</p>
+            <p class="hint student-login-tip" id="student-login-tip" hidden></p>
           </form>
         </section>
 
@@ -93,7 +91,7 @@
               </div>
             </div>
             <div class="study-summary-score">
-              <span>总积分</span>
+              <span>研习社总积分</span>
               <strong id="current-student-score">0</strong>
             </div>
           </div>

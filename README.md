@@ -43,7 +43,6 @@
 - 粘贴名单加分
 - 手动加减分
 - 积分日志查看
-- 候选名单管理
 - 完整报名表导出
 
 ## 页面路径
@@ -60,7 +59,6 @@
 - `/admin/paste-score.html`：粘贴名单加分
 - `/admin/manual-score.html`：手动加减分
 - `/admin/logs.html`：积分日志
-- `/admin/candidates.html`：候选名单管理
 
 ## 默认管理员账号
 

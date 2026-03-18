@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const querySubmit = document.getElementById("student-query-submit");
   const loginTip = document.getElementById("student-login-tip");
   const logoutButton = document.getElementById("student-logout-btn");
+  const topbar = document.getElementById("student-topbar");
   const loginCard = document.getElementById("student-login-card");
   const summaryCard = document.getElementById("student-summary-card");
   const boardCard = document.getElementById("student-board-card");
@@ -28,6 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setAuthenticatedLayout(authenticated) {
+    topbar.hidden = !authenticated;
     loginCard.hidden = authenticated;
     summaryCard.hidden = !authenticated;
     boardCard.hidden = !authenticated;
@@ -42,15 +44,17 @@ document.addEventListener("DOMContentLoaded", () => {
   function togglePasswordField(visible, studentName = "") {
     passwordField.hidden = !visible;
     if (visible) {
-      loginTip.textContent = `${studentName || "该学员"}已设置学号，请输入当前学号作为登录密码。`;
-      querySubmit.textContent = "输入密码并登录";
+      loginTip.hidden = false;
+      loginTip.textContent = `${studentName || "该学员"}已启用学号密码，请输入当前学号。`;
+      querySubmit.textContent = "验证并进入";
       passwordInput.focus();
       return;
     }
 
     passwordInput.value = "";
-    loginTip.textContent = "若当前学员未启用学号密码，系统会直接以姓名登录并进入学员页面。";
-    querySubmit.textContent = "登录并进入学员页面";
+    loginTip.hidden = true;
+    loginTip.textContent = "";
+    querySubmit.textContent = "进入积分表";
   }
 
   function resetWorkspace(options = {}) {
@@ -68,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
       queryInput.value = "";
     }
 
-    document.getElementById("student-workspace-subtitle").textContent = "请先输入姓名登录。若系统检测到该学员已启用学号密码，会继续要求输入学号作为登录密码。";
+    document.getElementById("student-workspace-subtitle").textContent = "同学，以下是您当前的积分表以及实时积分榜。";
     document.getElementById("current-student-name").textContent = "--";
     document.getElementById("current-student-rank").textContent = "--";
     document.getElementById("current-student-score").textContent = "0";
@@ -132,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("current-student-grade").textContent = App.formatDisplayValue(currentStudent.grade);
     document.getElementById("current-student-major").textContent = App.formatDisplayValue(currentStudent.major);
     document.getElementById("current-student-study-stage").textContent = App.formatDisplayValue(currentStudent.studyStage);
-    document.getElementById("student-workspace-subtitle").textContent = `${currentStudent.name} 同学，以下是你当前的积分表与实时积分榜。个人信息如需修改，请联系管理员。`;
+    document.getElementById("student-workspace-subtitle").textContent = `${currentStudent.name}同学，以下是您当前的积分表以及实时积分榜。`;
   }
 
   function renderBoardSummary(summary) {

@@ -1,6 +1,5 @@
 const express = require("express");
 const multer = require("multer");
-const { CandidateStatus } = require("@prisma/client");
 
 const prisma = require("../lib/prisma");
 const { requireAdminApi } = require("../middleware/auth");
@@ -14,7 +13,7 @@ const {
   previewMemberImport,
   confirmMemberImport,
 } = require("../services/importService");
-const { buildCandidatesWorkbook, buildAdminMembersWorkbook } = require("../services/exportService");
+const { buildAdminMembersWorkbook } = require("../services/exportService");
 const { sortMembersByScoreThenName, normalizeName, splitPastedNames } = require("../utils/name");
 const { buildMemberProfilePayload, getMemberProfileChanges } = require("../utils/memberProfile");
 const { loadFourthBoneClassProfiles } = require("../utils/memberProfileWorkbook");
@@ -96,11 +95,10 @@ function buildAdminMemberPayload(body) {
 router.use(requireAdminApi);
 
 router.get("/overview", asyncHandler(async (req, res) => {
-  const [memberCount, totalScore, logCount, candidateCount, recentLogs, members] = await Promise.all([
+  const [memberCount, totalScore, logCount, recentLogs, members] = await Promise.all([
     prisma.member.count(),
     prisma.member.aggregate({ _sum: { score: true } }),
     prisma.scoreLog.count(),
-    prisma.candidate.count(),
     prisma.scoreLog.findMany({
       take: 6,
       orderBy: { createdAt: "desc" },
@@ -119,7 +117,6 @@ router.get("/overview", asyncHandler(async (req, res) => {
     memberCount,
     totalScore: totalScore._sum.score || 0,
     logCount,
-    candidateCount,
     recentLogs,
     leaderboard,
     settings,
@@ -541,54 +538,6 @@ router.get("/logs", asyncHandler(async (req, res) => {
   });
 
   return res.json({ logs });
-}));
-
-router.get("/candidates", asyncHandler(async (req, res) => {
-  const candidates = await prisma.candidate.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  return res.json({ candidates });
-}));
-
-router.get("/candidates/export", asyncHandler(async (req, res) => {
-  const candidates = await prisma.candidate.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-
-  const buffer = buildCandidatesWorkbook(candidates, { includePrivate: true });
-  res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent("报名表-管理员导出.xlsx")}"`);
-  res.send(buffer);
-}));
-
-router.put("/candidates/:id", asyncHandler(async (req, res) => {
-  const id = Number.parseInt(req.params.id, 10);
-  const status = String(req.body.status || CandidateStatus.PENDING);
-  const note = req.body.note == null ? undefined : String(req.body.note);
-  const major = req.body.major == null ? undefined : String(req.body.major);
-  const phone = req.body.phone == null ? undefined : String(req.body.phone);
-
-  const candidate = await prisma.candidate.update({
-    where: { id },
-    data: {
-      status,
-      note,
-      major,
-      phone,
-    },
-  });
-
-  return res.json({
-    message: "候选名单已更新",
-    candidate,
-  });
-}));
-
-router.delete("/candidates/:id", asyncHandler(async (req, res) => {
-  const id = Number.parseInt(req.params.id, 10);
-  await prisma.candidate.delete({ where: { id } });
-  return res.json({ message: "候选名单记录已删除" });
 }));
 
 router.use((error, req, res, next) => {
