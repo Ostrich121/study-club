@@ -92,6 +92,89 @@ function buildAdminMemberPayload(body) {
   return payload;
 }
 
+async function syncAffectedBatchTotals(tx, batchIds) {
+  if (!batchIds.length) {
+    return;
+  }
+
+  const batches = await tx.importBatch.findMany({
+    where: {
+      id: {
+        in: batchIds,
+      },
+    },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          logs: true,
+        },
+      },
+    },
+  });
+
+  for (const batch of batches) {
+    if (batch._count.logs === 0) {
+      await tx.importBatch.delete({
+        where: { id: batch.id },
+      });
+      continue;
+    }
+
+    await tx.importBatch.update({
+      where: { id: batch.id },
+      data: {
+        totalMatched: batch._count.logs,
+      },
+    });
+  }
+}
+
+async function deleteMemberWithRelatedData(memberId) {
+  return prisma.$transaction(async (tx) => {
+    const member = await tx.member.findUnique({
+      where: { id: memberId },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (!member) {
+      return {
+        status: "missing",
+      };
+    }
+
+    const logs = await tx.scoreLog.findMany({
+      where: { memberId },
+      select: {
+        batchId: true,
+      },
+    });
+    const affectedBatchIds = [...new Set(
+      logs
+        .map((log) => log.batchId)
+        .filter((batchId) => Number.isInteger(batchId)),
+    )];
+    const deletedLogResult = await tx.scoreLog.deleteMany({
+      where: { memberId },
+    });
+
+    await syncAffectedBatchTotals(tx, affectedBatchIds);
+
+    await tx.member.delete({
+      where: { id: memberId },
+    });
+
+    return {
+      status: "deleted",
+      member,
+      deletedLogCount: deletedLogResult.count,
+    };
+  });
+}
+
 router.use(requireAdminApi);
 
 router.get("/overview", asyncHandler(async (req, res) => {
@@ -226,19 +309,22 @@ router.put("/members/:id", asyncHandler(async (req, res) => {
 
 router.delete("/members/:id", asyncHandler(async (req, res) => {
   const memberId = Number.parseInt(req.params.id, 10);
-  const logCount = await prisma.scoreLog.count({
-    where: { memberId },
-  });
-
-  if (logCount > 0) {
-    return res.status(400).json({ message: "该成员已有积分日志，暂不支持直接删除，可先将积分调整为 0 并停用" });
+  if (!Number.isInteger(memberId)) {
+    return res.status(400).json({ message: "成员参数无效" });
   }
 
-  await prisma.member.delete({
-    where: { id: memberId },
-  });
+  const result = await deleteMemberWithRelatedData(memberId);
 
-  return res.json({ message: "成员已删除" });
+  if (result.status === "missing") {
+    return res.status(404).json({ message: "成员不存在或已删除" });
+  }
+
+  return res.json({
+    message: result.deletedLogCount > 0
+      ? `成员已删除，并清理 ${result.deletedLogCount} 条积分日志`
+      : "成员已删除",
+    result,
+  });
 }));
 
 router.post("/members/fourth-bone-class/sync", asyncHandler(async (req, res) => {
@@ -324,10 +410,11 @@ router.post("/members/batch-delete", asyncHandler(async (req, res) => {
 
   const deleted = [];
   const skipped = [];
+  let deletedLogCount = 0;
 
   for (const memberId of parsedIds) {
-    const member = members.find((item) => item.id === memberId);
-    if (!member) {
+    const existingMember = members.find((item) => item.id === memberId);
+    if (!existingMember) {
       skipped.push({
         id: memberId,
         message: "成员不存在或已删除",
@@ -335,35 +422,31 @@ router.post("/members/batch-delete", asyncHandler(async (req, res) => {
       continue;
     }
 
-    const logCount = await prisma.scoreLog.count({
-      where: { memberId },
-    });
-
-    if (logCount > 0) {
+    const result = await deleteMemberWithRelatedData(memberId);
+    if (result.status === "missing") {
       skipped.push({
         id: memberId,
-        name: member.name,
-        message: "该成员已有积分日志，暂不支持直接删除",
+        name: existingMember.name,
+        message: "成员不存在或已删除",
       });
       continue;
     }
 
-    await prisma.member.delete({
-      where: { id: memberId },
-    });
-
     deleted.push({
-      id: member.id,
-      name: member.name,
+      id: result.member.id,
+      name: result.member.name,
+      deletedLogCount: result.deletedLogCount,
     });
+    deletedLogCount += result.deletedLogCount;
   }
 
   return res.json({
     message: deleted.length
-      ? `已删除 ${deleted.length} 名成员`
+      ? `已删除 ${deleted.length} 名成员，并清理 ${deletedLogCount} 条积分日志`
       : "未删除任何成员",
     result: {
       deletedCount: deleted.length,
+      deletedLogCount,
       skippedCount: skipped.length,
       deleted,
       skipped,

@@ -298,13 +298,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (action === "delete") {
-      if (!window.confirm("确认删除该成员吗？如果已有积分日志将无法删除。")) {
+      if (!window.confirm("确认删除该成员吗？删除后会同时清理该成员的积分日志。")) {
         return;
       }
 
       try {
-        await App.request(`/api/admin/members/${memberId}`, { method: "DELETE" });
-        App.showToast("成员已删除");
+        const result = await App.request(`/api/admin/members/${memberId}`, { method: "DELETE" });
+        App.showToast(result.message || "成员已删除");
         selectedIds.delete(String(memberId));
         await loadMembers();
       } catch (error) {
@@ -345,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (!window.confirm(`确认批量删除已选中的 ${ids.length} 名成员吗？已有积分日志的成员会被自动跳过。`)) {
+    if (!window.confirm(`确认批量删除已选中的 ${ids.length} 名成员吗？删除后会同时清理这些学员的积分日志。`)) {
       return;
     }
 
@@ -360,8 +360,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       renderBatchToolResult("批量删除结果", [
         `删除 ${result.result.deletedCount} 名`,
+        `清理日志 ${result.result.deletedLogCount} 条`,
         `跳过 ${result.result.skippedCount} 名`,
-      ], result.result.deletedCount ? "success" : "warning");
+      ], result.result.skippedCount > 0 ? "warning" : "success");
       App.showToast(result.message);
       await loadMembers();
     } catch (error) {
