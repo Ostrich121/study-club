@@ -38,28 +38,6 @@ if (isProduction) {
   app.set("trust proxy", 1);
 }
 
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
-const sessionConfig = {
-  secret: process.env.SESSION_SECRET || "study-club-local-secret",
-  name: "study-club.sid",
-  resave: false,
-  saveUninitialized: false,
-  proxy: isProduction,
-  cookie: {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: isProduction,
-    maxAge: 1000 * 60 * 60 * 8,
-  },
-};
-
-if (isProduction) {
-  sessionConfig.store = new PrismaSessionStore({ prisma });
-}
-
-app.use(session(sessionConfig));
-
 app.use("/css", express.static(path.join(publicDir, "css")));
 app.use("/js", express.static(path.join(publicDir, "js")));
 app.use("/assets", express.static(path.join(publicDir, "assets"), {
@@ -95,6 +73,28 @@ app.get("/student-dashboard.html", (req, res) => {
 app.get("/pages/signup.html", (req, res) => {
   res.sendFile(path.join(publicDir, "pages", "signup.html"));
 });
+
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true }));
+const sessionConfig = {
+  secret: process.env.SESSION_SECRET || "study-club-local-secret",
+  name: "study-club.sid",
+  resave: false,
+  saveUninitialized: false,
+  proxy: isProduction,
+  cookie: {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: isProduction,
+    maxAge: 1000 * 60 * 60 * 8,
+  },
+};
+
+if (isProduction) {
+  sessionConfig.store = new PrismaSessionStore({ prisma });
+}
+
+app.use(session(sessionConfig));
 
 app.get("/admin", requireAdminPage, (req, res) => {
   res.redirect("/admin/dashboard.html");
