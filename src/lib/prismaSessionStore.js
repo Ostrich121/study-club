@@ -32,7 +32,23 @@ class PrismaSessionStore extends session.Store {
     void this.cleanupExpiredSessions();
   }
 
+  isStoreAvailable() {
+    return Boolean(
+      this.prisma &&
+      this.prisma.session &&
+      typeof this.prisma.session.findUnique === "function",
+    );
+  }
+
+  logStoreError(action, error) {
+    console.error(`session store ${action} failed`, error);
+  }
+
   async cleanupExpiredSessions() {
+    if (!this.isStoreAvailable()) {
+      return;
+    }
+
     try {
       await this.prisma.session.deleteMany({
         where: {
@@ -42,11 +58,16 @@ class PrismaSessionStore extends session.Store {
         },
       });
     } catch (error) {
-      console.error("session cleanup failed", error);
+      this.logStoreError("cleanup", error);
     }
   }
 
   get(sid, callback) {
+    if (!this.isStoreAvailable()) {
+      callback(null, null);
+      return;
+    }
+
     this.prisma.session.findUnique({ where: { sid } })
       .then(async (record) => {
         if (!record) {
@@ -63,11 +84,19 @@ class PrismaSessionStore extends session.Store {
         callback(null, JSON.parse(record.data));
       })
       .catch((error) => {
-        callback(error);
+        this.logStoreError("get", error);
+        callback(null, null);
       });
   }
 
   set(sid, sess, callback) {
+    if (!this.isStoreAvailable()) {
+      if (callback) {
+        callback(null);
+      }
+      return;
+    }
+
     const data = JSON.stringify(sess);
     const expiresAt = getExpiresAtFromSession(sess);
 
@@ -85,23 +114,39 @@ class PrismaSessionStore extends session.Store {
     })
       .then(() => callback && callback(null))
       .catch((error) => {
+        this.logStoreError("set", error);
         if (callback) {
-          callback(error);
+          callback(null);
         }
       });
   }
 
   destroy(sid, callback) {
+    if (!this.isStoreAvailable()) {
+      if (callback) {
+        callback(null);
+      }
+      return;
+    }
+
     this.prisma.session.deleteMany({ where: { sid } })
       .then(() => callback && callback(null))
       .catch((error) => {
+        this.logStoreError("destroy", error);
         if (callback) {
-          callback(error);
+          callback(null);
         }
       });
   }
 
   touch(sid, sess, callback) {
+    if (!this.isStoreAvailable()) {
+      if (callback) {
+        callback(null);
+      }
+      return;
+    }
+
     const data = JSON.stringify(sess);
     const expiresAt = getExpiresAtFromSession(sess);
 
@@ -114,8 +159,9 @@ class PrismaSessionStore extends session.Store {
     })
       .then(() => callback && callback(null))
       .catch((error) => {
+        this.logStoreError("touch", error);
         if (callback) {
-          callback(error);
+          callback(null);
         }
       });
   }
