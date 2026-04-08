@@ -11,6 +11,7 @@ async function main() {
   const passwordHash = await bcrypt.hash("2025yxs", 10);
   const placeholderStudentIdPattern = /^2025YXS\d{3}$/;
   const profileEntries = loadFourthBoneClassProfiles().entries;
+  const baselineMembersSettingKey = "seedMembersInitialized";
 
   const memberProfilesByName = new Map(
     members.map((member, index) => [
@@ -85,59 +86,77 @@ async function main() {
     },
   });
 
-  // 成员基础名单只做缺失补录，不回写已有积分，避免部署时把线上数据重置为种子值。
-  for (const member of members) {
-    const rawProfileData = memberProfilesByName.get(member.name) || {};
-    const profileData = {
-      studentId: rawProfileData.studentId || null,
-      department: rawProfileData.department || null,
-      politicalStatus: rawProfileData.politicalStatus || null,
-      college: rawProfileData.college || null,
-      grade: rawProfileData.grade || null,
-      major: rawProfileData.major || null,
-      studyStage: rawProfileData.studyStage || null,
-    };
-    const existingMember = await prisma.member.findUnique({
-      where: { name: member.name },
-      select: {
-        id: true,
-        studentId: true,
-        department: true,
-        politicalStatus: true,
-        college: true,
-        grade: true,
-        major: true,
-        studyStage: true,
-      },
-    });
+  const baselineMembersSetting = await prisma.systemSetting.findUnique({
+    where: { key: baselineMembersSettingKey },
+  });
 
-    if (existingMember) {
-      const updateData = {};
+  if (!baselineMembersSetting) {
+    const memberCount = await prisma.member.count();
 
-      if (existingMember.studentId && placeholderStudentIdPattern.test(existingMember.studentId)) {
-        updateData.studentId = null;
-      }
+    // 基础名单只在首次初始化空库时导入，避免后续部署把已删除成员自动补回来。
+    if (memberCount === 0) {
+      for (const member of members) {
+        const rawProfileData = memberProfilesByName.get(member.name) || {};
+        const profileData = {
+          studentId: rawProfileData.studentId || null,
+          department: rawProfileData.department || null,
+          politicalStatus: rawProfileData.politicalStatus || null,
+          college: rawProfileData.college || null,
+          grade: rawProfileData.grade || null,
+          major: rawProfileData.major || null,
+          studyStage: rawProfileData.studyStage || null,
+        };
+        const existingMember = await prisma.member.findUnique({
+          where: { name: member.name },
+          select: {
+            id: true,
+            studentId: true,
+            department: true,
+            politicalStatus: true,
+            college: true,
+            grade: true,
+            major: true,
+            studyStage: true,
+          },
+        });
 
-      for (const key of ["department", "politicalStatus", "college", "grade", "major", "studyStage"]) {
-        if (!existingMember[key] && profileData[key]) {
-          updateData[key] = profileData[key];
+        if (existingMember) {
+          const updateData = {};
+
+          if (existingMember.studentId && placeholderStudentIdPattern.test(existingMember.studentId)) {
+            updateData.studentId = null;
+          }
+
+          for (const key of ["department", "politicalStatus", "college", "grade", "major", "studyStage"]) {
+            if (!existingMember[key] && profileData[key]) {
+              updateData[key] = profileData[key];
+            }
+          }
+
+          if (Object.keys(updateData).length > 0) {
+            await prisma.member.update({
+              where: { id: existingMember.id },
+              data: updateData,
+            });
+          }
+          continue;
         }
-      }
 
-      if (Object.keys(updateData).length > 0) {
-        await prisma.member.update({
-          where: { id: existingMember.id },
-          data: updateData,
+        await prisma.member.create({
+          data: {
+            ...member,
+            ...profileData,
+          },
         });
       }
-      continue;
+    } else {
+      console.log("成员库已有数据，跳过基础名单补录，避免重新创建已删除成员");
     }
 
-    await prisma.member.create({
-      data: {
-        ...member,
-        ...profileData,
-      },
+    await prisma.systemSetting.upsert({
+      where: { key: baselineMembersSettingKey },
+      update: { value: "true" },
+      create: { key: baselineMembersSettingKey, value: "true" },
     });
   }
 
