@@ -17,6 +17,14 @@ const publicDir = path.join(__dirname, "..", "public");
 const port = Number.parseInt(process.env.PORT, 10) || 3000;
 const isProduction = process.env.NODE_ENV === "production";
 
+// Render 的健康检查不应依赖会波动的外部资源，否则会把整个实例摘出流量。
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    time: new Date().toISOString(),
+  });
+});
+
 if (!process.env.DATABASE_URL) {
   throw new Error("缺少 DATABASE_URL，无法连接数据库");
 }
@@ -101,7 +109,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/public", publicRoutes);
 
-app.get("/api/health", async (req, res) => {
+app.get("/api/health/db", async (req, res) => {
   try {
     await prisma.$queryRaw`SELECT 1`;
     res.json({
