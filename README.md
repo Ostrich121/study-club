@@ -11,7 +11,7 @@
 - 默认管理员账号
 - 前后台页面
 - Excel 导入预览、积分日志、排行榜导出、报名表导出
-- Render 部署配置
+- Render + Neon 部署配置
 
 ## 技术栈
 
@@ -73,7 +73,7 @@
 
 建议直接使用 `Node.js 20+`。
 
-项目根目录已提供 [.nvmrc](/Users/xu/Desktop/研习社/.nvmrc)，如果你使用 `nvm`，可以直接：
+项目根目录已提供 [.nvmrc](./.nvmrc)，如果你使用 `nvm`，可以直接：
 
 ```bash
 nvm use
@@ -117,7 +117,7 @@ npm run dev
 
 ### 本地开发
 
-本地默认使用 SQLite，配置在项目根目录的 [.env](/Users/xu/Desktop/研习社/.env)：
+本地默认使用 SQLite，配置在项目根目录的 `.env`：
 
 ```env
 DATABASE_URL="file:./dev.db"
@@ -130,18 +130,30 @@ NODE_ENV="development"
 
 ### 线上部署
 
-线上部署使用 PostgreSQL。
+线上部署使用 PostgreSQL，当前部署配置默认按 `Render + Neon` 组合准备。
 
 项目中已额外提供部署专用 Prisma schema：
 
-- 本地默认 schema：[prisma/schema.prisma](/Users/xu/Desktop/研习社/prisma/schema.prisma)
-- 部署专用 schema：[prisma/schema.postgresql.prisma](/Users/xu/Desktop/研习社/prisma/schema.postgresql.prisma)
+- 本地默认 schema：[prisma/schema.prisma](./prisma/schema.prisma)
+- 部署专用 schema：[prisma/schema.postgresql.prisma](./prisma/schema.postgresql.prisma)
 
 部署时使用：
 
 - `npm run prisma:generate:deploy`
 - `npm run db:push:deploy`
 - `npm run build:deploy`
+
+生产环境需要提供这两个数据库变量：
+
+```env
+DATABASE_URL="Neon 提供的 pooled connection string"
+DIRECT_URL="Neon 提供的 direct connection string"
+```
+
+说明：
+
+- `DATABASE_URL` 供应用运行时使用，推荐填写 Neon 的 pooled 连接串
+- `DIRECT_URL` 供 Prisma `db push` 等需要直连的操作使用，填写 Neon 的 direct 连接串
 
 ## 种子数据说明
 
@@ -268,7 +280,7 @@ Excel 加分、粘贴名单加分、手动加减分、成员批量导入都使�
 
 ## 线上部署
 
-当前项目已经改成“本地 SQLite + 线上 PostgreSQL”的双环境版本，优先推荐 `Render + PostgreSQL`。
+当前项目已经改成“本地 SQLite + 线上 PostgreSQL”的双环境版本，优先推荐 `Render + Neon(PostgreSQL)`。
 
 ### 1. 推送代码到 GitHub
 
@@ -276,12 +288,12 @@ Excel 加分、粘贴名单加分、手动加减分、成员批量导入都使�
 
 注意：
 
-- 不要把 [.env](/Users/xu/Desktop/研习社/.env) 提交到公开仓库
-- 仓库中保留 [.env.example](/Users/xu/Desktop/研习社/.env.example) 即可
+- 不要把 `.env` 提交到公开仓库
+- 仓库中保留 [.env.example](./.env.example) 即可
 
-### 2. 使用 Render 一键部署
+### 2. 使用 Render + Neon 部署
 
-项目根目录已提供 [render.yaml](/Users/xu/Desktop/研习社/render.yaml)。
+项目根目录已提供 [render.yaml](./render.yaml)。
 
 你可以在 Render 中选择：
 
@@ -289,13 +301,18 @@ Excel 加分、粘贴名单加分、手动加减分、成员批量导入都使�
 2. 连接 GitHub 仓库
 3. 选择当前项目仓库
 4. Render 会自动读取 `render.yaml`
+5. 在 Neon 创建数据库，复制一组连接信息：
+   - pooled connection string 填到 Render 的 `DATABASE_URL`
+   - direct connection string 填到 Render 的 `DIRECT_URL`
+
+其中 `DATABASE_URL` 与 `DIRECT_URL` 在 `render.yaml` 里被标记为手动填写，因此首次创建 Blueprint 时 Render 会提示你输入。
 
 它会自动创建：
 
 - 一个 `Node Web Service`
-- 一个 `PostgreSQL` 数据库
-- 生产环境下的 `DATABASE_URL`
 - 自动生成的 `SESSION_SECRET`
+
+它不会再自动创建数据库，数据库改由 Neon 提供。
 
 ### 3. Render 部署时使用的命令
 
@@ -323,7 +340,7 @@ npm start
 
 - `prisma generate --schema prisma/schema.postgresql.prisma`
 - `prisma db push --schema prisma/schema.postgresql.prisma`
-- `prisma seed`
+- `npm run db:seed`
 
 因此会自动完成：
 
@@ -344,6 +361,7 @@ npm start
 核心要求只有这几个：
 
 - 设置 `DATABASE_URL`
+- 设置 `DIRECT_URL`
 - 设置 `SESSION_SECRET`
 - 设置 `NODE_ENV=production`
 - 构建前执行 `npm install`
@@ -361,7 +379,3 @@ npm start
 - 成员状态管理
 - 活动表与积分规则表
 - 积分区间统计与图表分析
-
-## 说明
-
-由于当前对话运行环境里没有安装 `node / npm`，我没法在这里直接完成 `npm install`、数据库初始化和启动验证；但项目已经补齐为“可本地运行 + 可线上部署”的版本，你按上面的步骤即可继续操作。
