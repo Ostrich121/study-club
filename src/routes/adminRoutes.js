@@ -503,12 +503,6 @@ router.post("/scores/excel/preview", upload.single("file"), asyncHandler(async (
 
   const reason = String(req.body.reason || "").trim();
   const activityDate = String(req.body.activityDate || "").trim();
-  if (!reason) {
-    return res.status(400).json({ message: "请填写本次加分原因" });
-  }
-  if (!activityDate) {
-    return res.status(400).json({ message: "请填写活动时间" });
-  }
 
   const result = await previewExcelScoreImport({
     buffer: req.file.buffer,
@@ -530,13 +524,6 @@ router.post("/scores/paste/preview", asyncHandler(async (req, res) => {
     return res.status(400).json({ message: "请先粘贴名单内容" });
   }
 
-  if (!reason) {
-    return res.status(400).json({ message: "请填写本次加分原因" });
-  }
-  if (!activityDate) {
-    return res.status(400).json({ message: "请填写活动时间" });
-  }
-
   const result = await previewPastedScoreImport({
     text,
     reason,
@@ -549,9 +536,11 @@ router.post("/scores/paste/preview", asyncHandler(async (req, res) => {
 
 router.post("/scores/confirm", asyncHandler(async (req, res) => {
   const token = String(req.body.token || "");
+  const allowDuplicateActivities = Boolean(req.body.allowDuplicateActivities);
   const result = await confirmScoreImport({
     token,
     operatorId: req.admin.id,
+    allowDuplicateActivities,
   });
 
   return res.json({

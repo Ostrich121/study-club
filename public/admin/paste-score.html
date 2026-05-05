@@ -6,28 +6,28 @@
   <title>粘贴名单加分</title>
   <link rel="stylesheet" href="/css/app.css" />
 </head>
-<body data-page="paste-score" data-title="粘贴名单加分" data-subtitle="支持换行、空格、顿号、逗号等多种分隔方式">
+<body data-page="paste-score" data-title="粘贴名单加分" data-subtitle="支持普通名单，也支持直接粘贴整行活动文本">
   <div id="admin-shell"></div>
   <div data-admin-content hidden>
     <section class="card">
         <div class="section-header">
           <div>
-            <h2>直接粘贴名单加分</h2>
-            <p>系统会自动拆分姓名或学号并匹配成员库，先预览后确认。</p>
+            <h2>直接粘贴内容加分</h2>
+            <p>可以粘贴普通姓名/学号名单，也可以直接粘贴一整行活动文本，系统会自动识别并拆分。</p>
           </div>
         </div>
       <form id="paste-score-form">
         <div class="field">
           <label for="paste-reason">本次加分原因</label>
-          <input id="paste-reason" placeholder="例如：粘贴名单加分 / 临时签到补录" />
+          <input id="paste-reason" placeholder="普通名单模式必填；整行活动文本可留空自动识别" />
         </div>
         <div class="field page-section">
           <label for="paste-activity-date">活动时间</label>
           <input id="paste-activity-date" type="date" />
         </div>
         <div class="field page-section">
-          <label for="paste-names">名单内容</label>
-          <textarea id="paste-names" placeholder="支持换行、空格、逗号、中文逗号、顿号等分隔方式，可混合粘贴姓名和学号"></textarea>
+          <label for="paste-names">粘贴内容</label>
+          <textarea id="paste-names" placeholder="可粘贴姓名/学号名单；也可直接粘贴：3月31日[TAB]地点[TAB]活动名称[TAB]参加人员[TAB]积分情况"></textarea>
         </div>
         <div class="form-actions">
           <button class="btn" id="paste-preview-btn" type="submit">生成预览</button>
@@ -40,11 +40,11 @@
       <div class="section-header">
         <div>
           <h2>预览结果</h2>
-          <p>适合补录、临时活动、快速签到等场景</p>
+          <p>适合临时补录、从 Excel 复制整行活动、快速签到等场景</p>
         </div>
       </div>
       <div id="paste-preview">
-        <div class="empty-state">粘贴名单并填写原因后，这里会显示识别结果。</div>
+        <div class="empty-state">粘贴内容后，这里会显示成员匹配结果，或自动拆分出的活动与额外积分规则。</div>
       </div>
     </section>
   </div>

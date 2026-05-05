@@ -6,14 +6,14 @@
   <title>Excel 上传加分</title>
   <link rel="stylesheet" href="/css/app.css" />
 </head>
-<body data-page="excel-score" data-title="Excel 上传加分" data-subtitle="上传签到表后先预览，再确认入库">
+<body data-page="excel-score" data-title="Excel 上传加分" data-subtitle="支持普通名单表和活动台账表，先预览，再确认入库">
   <div id="admin-shell"></div>
   <div data-admin-content hidden>
     <section class="card">
         <div class="section-header">
           <div>
-            <h2>上传签到 Excel</h2>
-            <p>支持 <span class="mono">.xlsx</span> 和 <span class="mono">.xls</span>，系统会自动识别姓名列或学号列并进行积分匹配。</p>
+            <h2>上传 Excel 加分</h2>
+            <p>支持 <span class="mono">.xlsx</span> 和 <span class="mono">.xls</span>。普通名单表会识别姓名/学号列；活动台账表会自动识别日期、活动内容、参加人员和积分情况。</p>
           </div>
         </div>
       <form id="excel-score-form">
@@ -24,7 +24,7 @@
           </div>
           <div class="field">
             <label for="excel-reason">本次加分原因</label>
-            <input id="excel-reason" name="reason" placeholder="例如：上传活动签到表" />
+            <input id="excel-reason" name="reason" placeholder="普通名单表必填；活动台账表可留空自动识别" />
           </div>
           <div class="field">
             <label for="excel-activity-date">活动时间</label>
@@ -35,7 +35,7 @@
           <button class="btn" id="excel-preview-btn" type="submit">生成预览</button>
           <button class="btn-secondary" id="excel-confirm-btn" type="button" disabled>确认加分入库</button>
         </div>
-        <p class="hint">所有加分均会写入积分日志，并记录活动时间、操作时间、原因与管理员。</p>
+        <p class="hint">如果上传的是活动台账，系统会自动拆分“每人积1分”和“额外积1分”等规则，并为额外积分生成单独日志。</p>
       </form>
     </section>
 
@@ -43,11 +43,11 @@
       <div class="section-header">
         <div>
           <h2>预览结果</h2>
-          <p>未匹配的姓名或学号会高亮显示，系统不会自动创建新成员</p>
+          <p>未匹配的姓名或学号会高亮显示；如果检测到活动已导入过，确认前会再次提醒</p>
         </div>
       </div>
       <div id="excel-preview">
-        <div class="empty-state">上传 Excel 后，这里会显示匹配成功人数、未匹配姓名/学号、重复识别成员和每个人的加分结果。</div>
+        <div class="empty-state">上传 Excel 后，这里会显示活动识别结果、匹配成员、未匹配成员、重复活动提醒和额外积分拆分结果。</div>
       </div>
     </section>
   </div>

@@ -7,7 +7,12 @@ const {
 
 const prisma = require("../lib/prisma");
 const { getSettings } = require("./settingsService");
-const { extractNamesFromWorkbook, parseMemberWorkbook } = require("../utils/excel");
+const {
+  extractNamesFromWorkbook,
+  parseMemberWorkbook,
+  parseActivityWorkbook,
+  parseActivityTextRows,
+} = require("../utils/excel");
 const { getNameCounts, normalizeName, splitPastedNames } = require("../utils/name");
 const {
   normalizeOptionalText,
@@ -101,14 +106,23 @@ async function savePendingOperation({ type, operatorId, payload }) {
   return operation.token;
 }
 
-function buildScorePreviewPayload({ names, members, settings, reason, activityDate, sourceType, sourceName, extraMeta = {} }) {
+function buildMemberLookups(members) {
   const memberByName = new Map(members.map((member) => [normalizeMatchKey(normalizeName(member.name)), member]));
   const memberByStudentId = new Map(
     members
       .filter((member) => normalizeStudentId(member.studentId))
       .map((member) => [normalizeMatchKey(member.studentId), member]),
   );
-  const counts = getIdentifierCounts(names);
+
+  return {
+    memberByName,
+    memberByStudentId,
+  };
+}
+
+function matchIdentifiersToMembers(identifiers, members) {
+  const { memberByName, memberByStudentId } = buildMemberLookups(members);
+  const counts = getIdentifierCounts(identifiers);
   const matchedMap = new Map();
   const unmatchedNames = [];
 
@@ -147,9 +161,6 @@ function buildScorePreviewPayload({ names, members, settings, reason, activityDa
     occurrenceCount: item.occurrenceCount,
     matchedInputs: item.matchedInputs,
     matchedBy: getMatchedSourceLabel(item.matchedSourceSet),
-    addScore: settings.deduplicateWithinImport
-      ? settings.pointsPerMatch
-      : item.occurrenceCount * settings.pointsPerMatch,
   }));
 
   const duplicateNames = [
@@ -163,7 +174,32 @@ function buildScorePreviewPayload({ names, members, settings, reason, activityDa
   ];
 
   return {
+    identifiers,
+    matchedMembers,
+    unmatchedNames,
+    duplicateNames,
+    summary: {
+      inputCount: identifiers.length,
+      uniqueCount: counts.size,
+      matchedCount: matchedMembers.length,
+      unmatchedCount: unmatchedNames.length,
+      duplicateCount: duplicateNames.length,
+    },
+  };
+}
+
+function buildSimpleScorePreviewPayload({ names, members, settings, reason, activityDate, sourceType, sourceName, extraMeta = {} }) {
+  const matched = matchIdentifiersToMembers(names, members);
+  const matchedMembers = matched.matchedMembers.map((item) => ({
+    ...item,
+    addScore: settings.deduplicateWithinImport
+      ? settings.pointsPerMatch
+      : item.occurrenceCount * settings.pointsPerMatch,
+  }));
+
+  return {
     type: "score",
+    mode: "simple",
     sourceType,
     sourceName,
     reason,
@@ -172,16 +208,211 @@ function buildScorePreviewPayload({ names, members, settings, reason, activityDa
     names,
     extraMeta,
     summary: {
-      inputCount: names.length,
-      uniqueCount: counts.size,
-      matchedCount: matchedMembers.length,
-      unmatchedCount: unmatchedNames.length,
-      duplicateCount: duplicateNames.length,
+      ...matched.summary,
       totalAddedScore: matchedMembers.reduce((sum, item) => sum + item.addScore, 0),
     },
     matchedMembers,
-    unmatchedNames,
-    duplicateNames,
+    unmatchedNames: matched.unmatchedNames,
+    duplicateNames: matched.duplicateNames,
+  };
+}
+
+function buildActivityKey(activityDate, reason) {
+  return `${String(activityDate || "").trim()}::${String(reason || "").trim()}`;
+}
+
+async function findExistingActivities(activityEntries, db = prisma) {
+  const reasons = [...new Set(
+    activityEntries
+      .map((entry) => String(entry.reason || "").trim())
+      .filter(Boolean),
+  )];
+  const activityDates = [...new Set(
+    activityEntries
+      .map((entry) => String(entry.activityDate || "").trim())
+      .filter(Boolean),
+  )];
+  const requestedKeys = new Set(
+    activityEntries
+      .map((entry) => buildActivityKey(entry.activityDate, entry.reason))
+      .filter((key) => key !== "::"),
+  );
+
+  if (!reasons.length || !activityDates.length || !requestedKeys.size) {
+    return [];
+  }
+
+  const batches = await db.importBatch.findMany({
+    where: {
+      reason: {
+        in: reasons,
+      },
+      logs: {
+        some: {
+          activityDate: {
+            in: activityDates,
+          },
+        },
+      },
+    },
+    include: {
+      logs: {
+        where: {
+          activityDate: {
+            in: activityDates,
+          },
+        },
+        select: {
+          activityDate: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const result = [];
+  const seen = new Set();
+
+  for (const batch of batches) {
+    for (const log of batch.logs) {
+      const key = buildActivityKey(log.activityDate, batch.reason);
+      const uniqueKey = `${batch.id}:${key}`;
+      if (!requestedKeys.has(key) || seen.has(uniqueKey)) {
+        continue;
+      }
+
+      seen.add(uniqueKey);
+      result.push({
+        key,
+        batchId: batch.id,
+        activityDate: log.activityDate,
+        reason: batch.reason,
+        sourceName: batch.sourceName,
+        createdAt: batch.createdAt,
+      });
+    }
+  }
+
+  return result;
+}
+
+function buildStructuredActivityPreviewPayload({
+  entries,
+  members,
+  settings,
+  sourceType,
+  sourceName,
+  extraMeta = {},
+  existingActivities = [],
+}) {
+  const existingByKey = new Map();
+  for (const item of existingActivities) {
+    const current = existingByKey.get(item.key) || [];
+    current.push({
+      batchId: item.batchId,
+      activityDate: item.activityDate,
+      reason: item.reason,
+      sourceName: item.sourceName,
+      createdAt: item.createdAt,
+    });
+    existingByKey.set(item.key, current);
+  }
+
+  const activities = entries.map((entry) => {
+    const warnings = [...entry.warnings];
+    const awards = entry.awards.map((award) => {
+      const matched = matchIdentifiersToMembers(award.identifiers, members);
+      if (!award.identifiers.length) {
+        warnings.push(`未识别到额外加分成员：${award.rawText}`);
+      }
+
+      const matchedMembers = matched.matchedMembers.map((item) => ({
+        ...item,
+        addScore: award.delta,
+      }));
+
+      return {
+        kind: award.kind,
+        delta: award.delta,
+        reason: award.reason,
+        bonusReason: award.bonusReason,
+        rawText: award.rawText,
+        identifiers: award.identifiers,
+        matchedMembers,
+        unmatchedNames: matched.unmatchedNames,
+        duplicateNames: matched.duplicateNames,
+        summary: {
+          ...matched.summary,
+          totalAddedScore: matchedMembers.reduce((sum, item) => sum + item.addScore, 0),
+        },
+      };
+    });
+
+    const key = buildActivityKey(entry.activityDate, entry.reason);
+    const existing = existingByKey.get(key) || [];
+    const summary = awards.reduce((acc, award) => ({
+      awardCount: acc.awardCount + 1,
+      matchedCount: acc.matchedCount + award.summary.matchedCount,
+      unmatchedCount: acc.unmatchedCount + award.summary.unmatchedCount,
+      duplicateCount: acc.duplicateCount + award.summary.duplicateCount,
+      totalAddedScore: acc.totalAddedScore + award.summary.totalAddedScore,
+      logCount: acc.logCount + award.matchedMembers.length,
+    }), {
+      awardCount: 0,
+      matchedCount: 0,
+      unmatchedCount: 0,
+      duplicateCount: 0,
+      totalAddedScore: 0,
+      logCount: 0,
+    });
+
+    return {
+      rowNumber: entry.rowNumber,
+      activityDate: entry.activityDate,
+      reason: entry.reason,
+      location: entry.location,
+      participantsText: entry.participantsText,
+      scoreText: entry.scoreText,
+      warnings,
+      awards,
+      hasExistingActivity: existing.length > 0,
+      existingActivities: existing,
+      summary,
+    };
+  });
+
+  return {
+    type: "activityImport",
+    mode: "structured",
+    sourceType,
+    sourceName,
+    settingsSnapshot: settings,
+    extraMeta,
+    existingActivities,
+    activities,
+    summary: activities.reduce((acc, activity) => ({
+      activityCount: acc.activityCount + 1,
+      awardCount: acc.awardCount + activity.summary.awardCount,
+      matchedCount: acc.matchedCount + activity.summary.matchedCount,
+      unmatchedCount: acc.unmatchedCount + activity.summary.unmatchedCount,
+      duplicateCount: acc.duplicateCount + activity.summary.duplicateCount,
+      totalAddedScore: acc.totalAddedScore + activity.summary.totalAddedScore,
+      duplicateActivityCount: acc.duplicateActivityCount + (activity.hasExistingActivity ? 1 : 0),
+      existingActivityCount: acc.existingActivityCount + activity.existingActivities.length,
+      warningCount: acc.warningCount + activity.warnings.length,
+    }), {
+      activityCount: 0,
+      awardCount: 0,
+      matchedCount: 0,
+      unmatchedCount: 0,
+      duplicateCount: 0,
+      totalAddedScore: 0,
+      duplicateActivityCount: 0,
+      existingActivityCount: 0,
+      warningCount: 0,
+    }),
   };
 }
 
@@ -191,6 +422,42 @@ async function previewExcelScoreImport({ buffer, originalName, reason, activityD
     select: { id: true, name: true, studentId: true, score: true },
   });
 
+  const activityWorkbook = parseActivityWorkbook(buffer);
+  if (activityWorkbook && activityWorkbook.entries.length > 0) {
+    const existingActivities = await findExistingActivities(activityWorkbook.entries);
+    const payload = buildStructuredActivityPreviewPayload({
+      entries: activityWorkbook.entries,
+      members,
+      settings,
+      sourceType: ScoreSourceType.EXCEL,
+      sourceName: originalName,
+      extraMeta: {
+        sheetName: activityWorkbook.sheetName,
+        headerRowIndex: activityWorkbook.headerRowIndex,
+        columns: activityWorkbook.columns,
+      },
+      existingActivities,
+    });
+
+    const token = await savePendingOperation({
+      type: "SCORE_IMPORT",
+      operatorId,
+      payload,
+    });
+
+    return {
+      token,
+      ...payload,
+    };
+  }
+
+  if (!reason) {
+    throw new Error("请填写本次加分原因，或上传带活动内容的台账型 Excel");
+  }
+  if (!activityDate) {
+    throw new Error("请填写活动时间，或上传带日期列的台账型 Excel");
+  }
+
   const memberNamesSet = new Set(members.map((item) => normalizeName(item.name)));
   const memberStudentIdSet = new Set(
     members
@@ -199,7 +466,7 @@ async function previewExcelScoreImport({ buffer, originalName, reason, activityD
   );
   const { sheetName, names, detection } = extractNamesFromWorkbook(buffer, memberNamesSet, memberStudentIdSet);
 
-  const payload = buildScorePreviewPayload({
+  const payload = buildSimpleScorePreviewPayload({
     names,
     members,
     settings,
@@ -232,8 +499,40 @@ async function previewPastedScoreImport({ text, reason, activityDate, operatorId
     select: { id: true, name: true, studentId: true, score: true },
   });
 
+  const activityEntries = parseActivityTextRows(text);
+  if (activityEntries.length > 0) {
+    const existingActivities = await findExistingActivities(activityEntries);
+    const payload = buildStructuredActivityPreviewPayload({
+      entries: activityEntries,
+      members,
+      settings,
+      sourceType: ScoreSourceType.PASTE,
+      sourceName: "粘贴活动文本",
+      extraMeta: {},
+      existingActivities,
+    });
+
+    const token = await savePendingOperation({
+      type: "SCORE_IMPORT",
+      operatorId,
+      payload,
+    });
+
+    return {
+      token,
+      ...payload,
+    };
+  }
+
+  if (!reason) {
+    throw new Error("请填写本次加分原因，或直接粘贴带活动信息的整行文本");
+  }
+  if (!activityDate) {
+    throw new Error("请填写活动时间，或直接粘贴带日期的整行文本");
+  }
+
   const names = splitPastedNames(text);
-  const payload = buildScorePreviewPayload({
+  const payload = buildSimpleScorePreviewPayload({
     names,
     members,
     settings,
@@ -256,7 +555,7 @@ async function previewPastedScoreImport({ text, reason, activityDate, operatorId
   };
 }
 
-async function confirmScoreImport({ token, operatorId }) {
+async function confirmScoreImport({ token, operatorId, allowDuplicateActivities = false }) {
   return prisma.$transaction(async (tx) => {
     const claimed = await tx.pendingOperation.updateMany({
       where: {
@@ -281,13 +580,112 @@ async function confirmScoreImport({ token, operatorId }) {
     });
     const payload = JSON.parse(operation.payload);
 
-    if (!payload.matchedMembers.length) {
-      throw new Error("当前没有可入库的匹配成员");
-    }
-
     const batchType = payload.sourceType === ScoreSourceType.EXCEL
       ? ImportBatchType.EXCEL
       : ImportBatchType.PASTE;
+
+    if (payload.mode === "structured") {
+      const activities = Array.isArray(payload.activities) ? payload.activities : [];
+      const existingActivities = await findExistingActivities(activities, tx);
+      if (existingActivities.length > 0 && !allowDuplicateActivities) {
+        const activityNames = [...new Set(existingActivities.map((item) => `${item.activityDate || "--"} · ${item.reason}`))];
+        throw new Error(`检测到这些活动已经导入过：${activityNames.join("；")}。如需重复添加，请在弹窗中确认继续。`);
+      }
+
+      const importResults = [];
+      let totalMatchedCount = 0;
+      let totalAddedScore = 0;
+
+      for (const activity of activities) {
+        const logEntries = [];
+        for (const award of activity.awards || []) {
+          for (const member of award.matchedMembers || []) {
+            logEntries.push({
+              memberId: member.memberId,
+              delta: member.addScore,
+              reason: award.reason,
+            });
+          }
+        }
+
+        if (!logEntries.length) {
+          continue;
+        }
+
+        const pointsPerMember = (activity.awards || []).find((award) => Number.isInteger(award.delta))?.delta || 0;
+        const batch = await tx.importBatch.create({
+          data: {
+            type: batchType,
+            reason: activity.reason,
+            sourceName: payload.sourceName,
+            pointsPerMember,
+            totalMatched: logEntries.length,
+            operatorId,
+          },
+        });
+
+        for (const entry of logEntries) {
+          await tx.member.update({
+            where: { id: entry.memberId },
+            data: {
+              score: {
+                increment: entry.delta,
+              },
+            },
+          });
+
+          await tx.scoreLog.create({
+            data: {
+              memberId: entry.memberId,
+              delta: entry.delta,
+              activityDate: activity.activityDate,
+              reason: entry.reason,
+              sourceType: payload.sourceType,
+              operatorId,
+              batchId: batch.id,
+            },
+          });
+        }
+
+        totalMatchedCount += logEntries.length;
+        totalAddedScore += logEntries.reduce((sum, item) => sum + item.delta, 0);
+        importResults.push({
+          batchId: batch.id,
+          reason: activity.reason,
+          activityDate: activity.activityDate,
+          totalMatched: logEntries.length,
+          totalAddedScore: logEntries.reduce((sum, item) => sum + item.delta, 0),
+        });
+      }
+
+      if (!importResults.length) {
+        throw new Error("当前没有可入库的匹配成员");
+      }
+
+      await tx.pendingOperation.update({
+        where: { token },
+        data: {
+          status: OperationStatus.CONFIRMED,
+          confirmedAt: new Date(),
+        },
+      });
+
+      return {
+        mode: "structured",
+        sourceName: payload.sourceName,
+        summary: {
+          ...payload.summary,
+          matchedCount: totalMatchedCount,
+          totalAddedScore,
+          importedActivityCount: importResults.length,
+        },
+        activities: importResults,
+      };
+    }
+
+    if (!payload.matchedMembers.length) {
+      throw new Error("当前没有可入库的匹配成员");
+    }
 
     const batch = await tx.importBatch.create({
         data: {
